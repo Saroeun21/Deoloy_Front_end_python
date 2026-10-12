@@ -14,8 +14,12 @@ import PlacePage from './features/discovery/page/PlacePage';
 import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
 import { AuthProvider } from './app/providers/AuthProviders';
+import { TripStoreProvider } from './features/trips/store/useTripStore.jsx';
+import AIChatAssistant from './features/assistant/components/AIChatAssistant.jsx';
 import { useAuth } from './app/providers/authContext.js';
 import savedPlaceApi from './services/api/saved_api.js';
+import savedItemApi from './services/api/savedItemApi.js';
+import { getSavedItemKey } from './features/discovery/page/components/savedItemKey.js';
 
 function ProtectedPage({ children }) {
   const { accessToken } = useAuth();
@@ -33,6 +37,7 @@ function UserPage() {
   const location = useLocation();
   const [savedPlaces, setSavedPlaces] = useState([]);
   const [savedPlaceRecords, setSavedPlaceRecords] = useState([]);
+  const [savedItemRecords, setSavedItemRecords] = useState([]);
   const [savedPlacesLoadedKey, setSavedPlacesLoadedKey] = useState('');
   const [savedPlacesError, setSavedPlacesError] = useState('');
   const [savingPlaceIds, setSavingPlaceIds] = useState([]);
@@ -44,20 +49,39 @@ function UserPage() {
     const loadKey = `${accessToken}:${savedPlacesReloadKey}`;
 
     async function loadSavedPlaces() {
+      const [placesResult, itemsResult] = await Promise.allSettled([
+        savedPlaceApi.list(),
+        savedItemApi.list(),
+      ]);
       try {
-        const records = await savedPlaceApi.list();
         if (cancelled) return;
-        setSavedPlaceRecords(records);
-        setSavedPlaces(records.map((record) => record.place_id));
-        setSavedPlacesError('');
-      } catch (error) {
-        if (cancelled) return;
-        console.error('Could not load saved places:', error);
-        setSavedPlaceRecords([]);
-        setSavedPlaces([]);
-        setSavedPlacesError(
-          error instanceof Error ? error.message : 'Could not load saved places.',
-        );
+        const errors = [];
+        if (placesResult.status === 'fulfilled') {
+          setSavedPlaceRecords(placesResult.value);
+          setSavedPlaces(placesResult.value.map((record) => record.place_id));
+        } else {
+          setSavedPlaceRecords([]);
+          setSavedPlaces([]);
+          errors.push(placesResult.reason);
+        }
+        if (itemsResult.status === 'fulfilled') {
+          setSavedItemRecords(itemsResult.value);
+        } else {
+          setSavedItemRecords([]);
+          errors.push(itemsResult.reason);
+        }
+        if (errors.length) {
+          console.error('Could not load saved items:', errors);
+          setSavedPlacesError(
+            errors
+              .map((error) =>
+                error instanceof Error ? error.message : 'Could not load saved items.',
+              )
+              .join(' '),
+          );
+        } else {
+          setSavedPlacesError('');
+        }
       } finally {
         if (!cancelled) setSavedPlacesLoadedKey(loadKey);
       }
@@ -74,50 +98,81 @@ function UserPage() {
       savedPlacesLoadedKey !== `${accessToken}:${savedPlacesReloadKey}`,
   );
 
-  const handleToggleSave = async (placeId) => {
+  const savedItemKeys = [
+    ...savedPlaces.map((id) => `place:${String(id)}`),
+    ...savedItemRecords.map(
+      (record) => `${record.item_type}:${String(record.item_key)}`,
+    ),
+  ];
+
+  const handleToggleSave = async (item) => {
     if (!accessToken) {
       navigate('/login', { state: { from: location } });
       return;
     }
+    const saveKey = getSavedItemKey(item);
+    if (!saveKey) return;
     if (
       savingPlaceIds.some(
-        (savingId) => String(savingId) === String(placeId),
+        (savingId) => savingId === saveKey,
       )
     ) {
       return;
     }
 
-    setSavingPlaceIds((current) => [...current, placeId]);
+    setSavingPlaceIds((current) => [...current, saveKey]);
     setSavedPlacesError('');
     try {
-      const savedRecord = savedPlaceRecords.find(
-        (record) => String(record.place_id) === String(placeId),
-      );
-      if (savedRecord) {
-        await savedPlaceApi.remove(savedRecord.id);
-        setSavedPlaceRecords((current) =>
-          current.filter((record) => record.id !== savedRecord.id),
+      const [itemType, itemKey] = saveKey.split(':', 2);
+      if (itemType === 'place') {
+        const savedRecord = savedPlaceRecords.find(
+          (record) => String(record.place_id) === itemKey,
         );
-        setSavedPlaces((current) =>
-          current.filter((id) => String(id) !== String(placeId)),
-        );
+        if (savedRecord) {
+          await savedPlaceApi.remove(savedRecord.id);
+          setSavedPlaceRecords((current) =>
+            current.filter((record) => record.id !== savedRecord.id),
+          );
+          setSavedPlaces((current) =>
+            current.filter((id) => String(id) !== itemKey),
+          );
+        } else {
+          const record = await savedPlaceApi.save(itemKey);
+          setSavedPlaceRecords((current) => [...current, record]);
+          setSavedPlaces((current) =>
+            current.some((id) => String(id) === itemKey)
+              ? current
+              : [...current, record.place_id],
+          );
+        }
       } else {
-        const record = await savedPlaceApi.save(placeId);
-        setSavedPlaceRecords((current) => [...current, record]);
-        setSavedPlaces((current) =>
-          current.some((id) => String(id) === String(placeId))
-            ? current
-            : [...current, record.place_id],
+        const savedRecord = savedItemRecords.find(
+          (record) =>
+            record.item_type === itemType &&
+            String(record.item_key) === itemKey,
         );
+        if (savedRecord) {
+          await savedItemApi.remove(savedRecord.id);
+          setSavedItemRecords((current) =>
+            current.filter((record) => record.id !== savedRecord.id),
+          );
+        } else {
+          const record = await savedItemApi.save({
+            ...item,
+            item_type: itemType,
+            item_key: itemKey,
+          });
+          setSavedItemRecords((current) => [...current, record]);
+        }
       }
     } catch (error) {
-      console.error('Could not update saved places:', error);
+      console.error('Could not update saved items:', error);
       setSavedPlacesError(
         error instanceof Error ? error.message : 'Could not update saved places.',
       );
     } finally {
       setSavingPlaceIds((current) =>
-        current.filter((id) => String(id) !== String(placeId)),
+        current.filter((key) => key !== saveKey),
       );
     }
   };
@@ -154,9 +209,8 @@ function UserPage() {
             path="/"
             element={
               <Home
-                savedPlaces={savedPlaces}
+                savedItemKeys={savedItemKeys}
                 onToggleSave={handleToggleSave}
-                canSavePlaces={!savedPlacesLoading && !savedPlacesError}
                 savingPlaceIds={savingPlaceIds}
               />
             }
@@ -165,9 +219,18 @@ function UserPage() {
             path="/explore"
             element={
               <Explore
-                savedPlaces={savedPlaces}
+                savedItemKeys={savedItemKeys}
                 onToggleSave={handleToggleSave}
-                canSavePlaces={!savedPlacesLoading && !savedPlacesError}
+                savingPlaceIds={savingPlaceIds}
+              />
+            }
+          />
+          <Route
+            path="/places/:placeType/:placeId"
+            element={
+              <PlacePage
+                savedItemKeys={savedItemKeys}
+                onToggleSave={handleToggleSave}
                 savingPlaceIds={savingPlaceIds}
               />
             }
@@ -176,9 +239,8 @@ function UserPage() {
             path="/places/:placeId"
             element={
               <PlacePage
-                savedPlaces={savedPlaces}
+                savedItemKeys={savedItemKeys}
                 onToggleSave={handleToggleSave}
-                canSavePlaces={!savedPlacesLoading && !savedPlacesError}
                 savingPlaceIds={savingPlaceIds}
               />
             }
@@ -189,6 +251,7 @@ function UserPage() {
               <ProtectedPage>
                 <Saved
                   savedPlaces={savedPlaces}
+                  savedCatalogItems={savedItemRecords}
                   onToggleSave={handleToggleSave}
                   savingPlaceIds={savingPlaceIds}
                   savedPlacesLoading={savedPlacesLoading}
@@ -268,6 +331,7 @@ function UserPage() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <AIChatAssistant />
     </div>
   );
 }
@@ -275,7 +339,9 @@ function UserPage() {
 export default function App() {
   return (
     <AuthProvider>
-      <UserPage />
+      <TripStoreProvider>
+        <UserPage />
+      </TripStoreProvider>
     </AuthProvider>
   );
 }

@@ -7,6 +7,14 @@ import tripApi from "../../services/api/tripapi.js";
 import tripWalletApi from "../../services/api/trip_wallet_api.js";
 import walletApi from "../../services/api/walletapi.js";
 import walletTransactionApi from "../../services/api/wallet_transaction_api.js";
+import {
+  ArrowDownUp,
+  CalendarDays,
+  CreditCard,
+  Plus,
+  Search,
+  Wallet,
+} from "lucide-react";
 
 const today = () => new Date().toISOString().slice(0, 10);
 function formatMoney(value, currencyCode = "USD") {
@@ -49,6 +57,15 @@ function Budget() {
   const [fundAmount, setFundAmount] = useState("");
   const [personalWalletName, setPersonalWalletName] = useState("");
   const [personalWalletCurrency, setPersonalWalletCurrency] = useState("USD");
+  const [activeMode, setActiveMode] = useState("overview");
+  const [expenseSearch, setExpenseSearch] = useState("");
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState("all");
+  const [expenseDateFrom, setExpenseDateFrom] = useState("");
+  const [expenseDateTo, setExpenseDateTo] = useState("");
+  const [fxRate, setFxRate] = useState("");
+  const [fxAmount, setFxAmount] = useState("1");
+  const [fxCurrency, setFxCurrency] = useState("THB");
+  const expenseFormRef = useRef(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -136,13 +153,18 @@ function Budget() {
       String(right.transaction_date).localeCompare(String(left.transaction_date)),
     );
 
+  const activeCurrency = activeBudget?.currency || selectedTrip?.currency || "USD";
   const totalSpent = useMemo(
     () =>
       activeExpenses.reduce(
-        (total, expense) => total + Number(expense.amount || 0),
+        (total, expense) =>
+          String(expense.currency || activeCurrency).toUpperCase() ===
+          String(activeCurrency).toUpperCase()
+            ? total + Number(expense.amount || 0)
+            : total,
         0,
       ),
-    [activeExpenses],
+    [activeExpenses, activeCurrency],
   );
   const totalBudget = Number(
     activeBudget?.total_budget ?? selectedTrip?.budget_amount ?? budgetInput ?? 0,
@@ -150,16 +172,62 @@ function Budget() {
   const remaining = totalBudget - totalSpent;
   const spentPercent =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
-  const activeCurrency = activeBudget?.currency || selectedTrip?.currency || "USD";
   const categoryTotals = activeCategories.map((category) => {
     const spent = activeExpenses
       .filter(
         (expense) =>
-          String(expense.budget_category_id) === String(category.id),
+          String(expense.budget_category_id) === String(category.id) &&
+          String(expense.currency || activeCurrency).toUpperCase() ===
+            String(activeCurrency).toUpperCase(),
       )
       .reduce((total, expense) => total + Number(expense.amount || 0), 0);
     return { ...category, spent };
   });
+  const filteredExpenses = activeExpenses.filter((expense) => {
+    const matchesSearch = `${expense.description || ""} ${expense.payment_method || ""}`
+      .toLowerCase()
+      .includes(expenseSearch.trim().toLowerCase());
+    const matchesCategory =
+      expenseCategoryFilter === "all" ||
+      String(expense.budget_category_id) === expenseCategoryFilter;
+    const expenseDay = String(expense.expense_date || "").slice(0, 10);
+    const matchesFrom = !expenseDateFrom || expenseDay >= expenseDateFrom;
+    const matchesTo = !expenseDateTo || expenseDay <= expenseDateTo;
+    return matchesSearch && matchesCategory && matchesFrom && matchesTo;
+  });
+  const durationDays =
+    selectedTrip?.start_date && selectedTrip?.end_date
+      ? Math.max(
+          1,
+          Math.round(
+            (new Date(`${selectedTrip.end_date}T00:00:00`).getTime() -
+              new Date(`${selectedTrip.start_date}T00:00:00`).getTime()) /
+              86_400_000,
+          ) + 1,
+        )
+      : 1;
+  const dailyAverage = totalSpent / durationDays;
+  const allocationTotal = categoryTotals.reduce(
+    (total, category) => total + Number(category.allocated_amount || 0),
+    0,
+  );
+  const allocationColors = [
+    "bg-teal-600",
+    "bg-indigo-500",
+    "bg-amber-400",
+    "bg-sky-500",
+    "bg-rose-400",
+    "bg-violet-500",
+  ];
+  const hasFxRate = Number.isFinite(Number(fxRate)) && Number(fxRate) > 0;
+
+  function navigateToMode(mode, targetId) {
+    setActiveMode(mode);
+    document.getElementById(targetId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 
   function resetExpenseForm() {
     setExpenseName("");
@@ -473,37 +541,89 @@ function Budget() {
   }
 
   return (
-    <main className="min-h-full bg-slate-50 p-5 text-slate-800 sm:p-8">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-wrap items-end justify-between gap-4">
+    <main className="min-h-full bg-[#f8fafc] p-5 text-slate-800 sm:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
-              Trip finances
+              <span aria-hidden="true">● </span>Financial control hub
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight">
-              Budget &amp; wallet
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              Budget &amp; Wallet
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Track trip budgets, category limits, expenses, and wallet funds.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              Track expenses, manage your trip wallet, and keep category spending
+              aligned with your travel budget.
             </p>
           </div>
-          {trips.length > 0 && (
-            <label className="min-w-64 text-sm font-medium text-slate-600">
-              Active trip
-              <select
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                onChange={(event) => selectTrip(event.target.value)}
-                value={selectedTripId}
-              >
-                {trips.map((trip) => (
-                  <option key={trip.id} value={trip.id}>
-                    {trip.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          <div className="flex flex-wrap items-end gap-3">
+            {trips.length > 0 && (
+              <label className="min-w-56 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Active trip
+                <select
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-slate-800 shadow-sm"
+                  onChange={(event) => selectTrip(event.target.value)}
+                  value={selectedTripId}
+                >
+                  {trips.map((trip) => (
+                    <option key={trip.id} value={trip.id}>
+                      {trip.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <button
+              className="inline-flex items-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-900"
+              onClick={() => {
+                expenseFormRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                document.getElementById("expense-description")?.focus({
+                  preventScroll: true,
+                });
+              }}
+              type="button"
+            >
+              <Plus aria-hidden="true" size={17} />
+              Add new expense
+            </button>
+          </div>
         </header>
+
+        {selectedTrip && (
+          <nav
+            aria-label="Budget sections"
+            className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm"
+          >
+            {[
+              ["overview", "Overview & ledger", "budget-overview"],
+              ["group", "Group split", "group-ledger"],
+              ["wallet", "Wallets", "trip-wallet"],
+              ["currency", "Currency calculator", "currency-calculator"],
+            ].map(([mode, label, target]) => (
+              <button
+                aria-current={activeMode === mode ? "page" : undefined}
+                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeMode === mode
+                    ? "bg-teal-50 text-teal-800"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                }`}
+                key={mode}
+                onClick={() => navigateToMode(mode, target)}
+                type="button"
+              >
+                {label}
+                {mode === "group" && (
+                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-500">
+                    Not set up
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        )}
 
         {error && (
           <div
@@ -549,16 +669,42 @@ function Budget() {
           <>
             <section
               aria-label="Trip budget overview"
-              className="grid gap-4 sm:grid-cols-3"
+              className="scroll-mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7"
+              id="budget-overview"
             >
-              <article className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <p className="text-sm font-medium text-slate-500">
-                  Budget · {activeCurrency}
-                </p>
-                <form className="mt-2 flex gap-2" onSubmit={saveBudget}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">
+                    Budget overview
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-950">
+                    {selectedTrip.name}
+                  </h2>
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                    remaining >= 0
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {remaining >= 0 ? "On track" : "Over budget"}
+                </span>
+              </div>
+              <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-sm text-slate-500">Total trip budget</p>
+                  <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">
+                    {formatMoney(totalBudget, activeCurrency)}
+                  </p>
+                </div>
+                <form className="flex gap-2" onSubmit={saveBudget}>
+                  <label className="sr-only" htmlFor="trip-budget-amount">
+                    Trip budget amount
+                  </label>
                   <input
-                    aria-label="Trip budget amount"
-                    className="min-w-0 flex-1 border-b border-slate-200 bg-transparent text-2xl font-bold outline-none focus:border-teal-600"
+                    className="w-36 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                    id="trip-budget-amount"
                     min="0"
                     onChange={(event) => setBudgetInput(event.target.value)}
                     step="0.01"
@@ -566,64 +712,163 @@ function Budget() {
                     value={budgetInput}
                   />
                   <button
-                    className="rounded-lg bg-teal-50 px-3 text-xs font-bold text-teal-800 disabled:opacity-50"
+                    className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
                     disabled={busy}
                     type="submit"
                   >
-                    Save
+                    Save budget
                   </button>
                 </form>
-                <p className="mt-2 text-xs text-slate-400">
-                  {activeBudget ? "Saved trip budget" : "Budget not saved yet"}
-                </p>
-              </article>
-
-              <article className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <p className="text-sm font-medium text-slate-500">Spent</p>
-                <p className="mt-2 text-2xl font-bold">
-                  {formatMoney(totalSpent, activeCurrency)}
-                </p>
-                <p className="mt-2 text-xs text-slate-400">
-                  {activeExpenses.length} expenses · calculated from expense records
-                </p>
-              </article>
-
-              <article className="rounded-2xl bg-teal-800 p-5 text-white shadow-sm">
-                <p className="text-sm font-medium text-teal-100">Budget remaining</p>
-                <p className="mt-2 text-2xl font-bold">
-                  {formatMoney(remaining, activeCurrency)}
-                </p>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/20">
-                  <div
-                    className="h-full rounded-full bg-teal-300 transition-[width]"
-                    style={{ width: `${spentPercent}%` }}
-                  />
+              </div>
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
+                <div className="flex h-full w-full">
+                  {categoryTotals.map((category, index) => {
+                    const share =
+                      allocationTotal > 0
+                        ? (Number(category.allocated_amount || 0) /
+                            allocationTotal) *
+                          100
+                        : 0;
+                    return (
+                      <span
+                        className={`${allocationColors[index % allocationColors.length]} first:rounded-l-full last:rounded-r-full`}
+                        key={category.id}
+                        style={{ width: `${share}%` }}
+                        title={`${category.name}: ${formatMoney(category.allocated_amount, activeCurrency)}`}
+                      />
+                    );
+                  })}
                 </div>
-                <p className="mt-2 text-xs text-teal-100">
-                  {totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}
-                  % used
+              </div>
+              {categoryTotals.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                  {categoryTotals.map((category, index) => (
+                    <span
+                      className="inline-flex items-center gap-1.5 text-xs text-slate-500"
+                      key={category.id}
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${allocationColors[index % allocationColors.length]}`}
+                      />
+                      {category.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["Total budget", formatMoney(totalBudget, activeCurrency)],
+                  [
+                    "Spent so far",
+                    `${formatMoney(totalSpent, activeCurrency)} · ${Math.round(spentPercent)}%`,
+                  ],
+                  ["Remaining", formatMoney(remaining, activeCurrency)],
+                  ["Daily average", `${formatMoney(dailyAverage, activeCurrency)} / day`],
+                ].map(([label, value], index) => (
+                  <article
+                    className={`rounded-2xl p-4 ${
+                      index === 2 ? "bg-teal-800 text-white" : "bg-slate-50"
+                    }`}
+                    key={label}
+                  >
+                    <p
+                      className={`text-xs font-semibold uppercase tracking-wide ${
+                        index === 2 ? "text-teal-100" : "text-slate-500"
+                      }`}
+                    >
+                      {label}
+                    </p>
+                    <p className="mt-2 text-xl font-bold">{value}</p>
+                  </article>
+                ))}
+              </div>
+              {totalBudget > 0 && (
+                <p className="mt-4 rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+                  <span aria-hidden="true">💡 </span>
+                  You have used {Math.round(spentPercent)}% of the saved trip budget.
+                  {categoryTotals.length === 0 &&
+                    " Add budget categories to see how your allocations are distributed."}
                 </p>
-              </article>
+              )}
             </section>
 
-            <section className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)]">
+            <section className="grid scroll-mt-6 gap-6 lg:grid-cols-2">
               <div className="space-y-6">
-                <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
+                <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-lg font-bold">Expenses</h2>
+                      <h2 className="text-lg font-bold text-slate-950">
+                        Recent transactions
+                      </h2>
                       <p className="text-sm text-slate-500">
-                        Each new expense creates a wallet withdrawal.
+                        Expense records and their linked trip-wallet withdrawals.
                       </p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                      {activeExpenses.length} items
+                      {filteredExpenses.length} of {activeExpenses.length}
                     </span>
                   </div>
 
-                  {activeExpenses.length ? (
+                  <div className="mb-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+                    <label className="relative">
+                      <Search
+                        aria-hidden="true"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        size={16}
+                      />
+                      <input
+                        aria-label="Search expenses"
+                        className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-teal-600"
+                        onChange={(event) => setExpenseSearch(event.target.value)}
+                        placeholder="Search transactions"
+                        type="search"
+                        value={expenseSearch}
+                      />
+                    </label>
+                    <label>
+                      <span className="sr-only">Filter by category</span>
+                      <select
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+                        onChange={(event) =>
+                          setExpenseCategoryFilter(event.target.value)
+                        }
+                        value={expenseCategoryFilter}
+                      >
+                        <option value="all">All categories</option>
+                        {activeCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-2">
+                      <CalendarDays
+                        aria-hidden="true"
+                        className="shrink-0 text-slate-400"
+                        size={15}
+                      />
+                      <input
+                        aria-label="Expenses from date"
+                        className="min-w-0 py-2 text-xs text-slate-600 outline-none"
+                        onChange={(event) => setExpenseDateFrom(event.target.value)}
+                        type="date"
+                        value={expenseDateFrom}
+                      />
+                      <span className="text-xs text-slate-400">to</span>
+                      <input
+                        aria-label="Expenses to date"
+                        className="min-w-0 py-2 text-xs text-slate-600 outline-none"
+                        onChange={(event) => setExpenseDateTo(event.target.value)}
+                        type="date"
+                        value={expenseDateTo}
+                      />
+                    </div>
+                  </div>
+
+                  {filteredExpenses.length ? (
                     <ul className="divide-y divide-slate-100">
-                      {activeExpenses.map((expense) => {
+                      {filteredExpenses.map((expense) => {
                         const category = activeCategories.find(
                           (item) =>
                             String(item.id) ===
@@ -634,7 +879,7 @@ function Budget() {
                         );
                         return (
                           <li
-                            className="flex items-start justify-between gap-4 py-4"
+                            className="flex flex-wrap items-start justify-between gap-4 py-4"
                             key={expense.id}
                           >
                             <div className="min-w-0">
@@ -682,13 +927,17 @@ function Budget() {
                     </ul>
                   ) : (
                     <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-                      No expenses for this trip yet.
+                      {activeExpenses.length
+                        ? "No transactions match these filters."
+                        : "No expenses for this trip yet."}
                     </p>
                   )}
                 </section>
 
-                <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-                  <h2 className="text-lg font-bold">Budget categories</h2>
+                <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+                  <h2 className="text-lg font-bold text-slate-950">
+                    Category breakdown
+                  </h2>
                   <ul className="mt-4 space-y-4">
                     {categoryTotals.map((category) => {
                       const percent =
@@ -761,12 +1010,82 @@ function Budget() {
                     </p>
                   )}
                 </section>
+
+                <section
+                  className="scroll-mt-6 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+                  id="currency-calculator"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl bg-indigo-50 p-2 text-indigo-700">
+                      <ArrowDownUp aria-hidden="true" size={18} />
+                    </span>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-950">
+                        Currency calculator
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Enter a rate to calculate; no live FX feed is connected.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-[1fr_auto] items-end gap-3">
+                    <label className="text-xs font-semibold text-slate-500">
+                      1 {activeCurrency} equals ({fxCurrency})
+                      <input
+                        aria-label={`Exchange rate, units of destination currency per ${activeCurrency}`}
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-teal-600"
+                        min="0.000001"
+                        onChange={(event) => setFxRate(event.target.value)}
+                        placeholder="Enter exchange rate"
+                        step="any"
+                        type="number"
+                        value={fxRate}
+                      />
+                    </label>
+                    <label className="text-xs font-semibold text-slate-500">
+                      Amount
+                      <input
+                        aria-label={`Amount in ${activeCurrency}`}
+                        className="mt-1.5 w-28 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-teal-600"
+                        min="0"
+                        onChange={(event) => setFxAmount(event.target.value)}
+                        step="any"
+                        type="number"
+                        value={fxAmount}
+                      />
+                    </label>
+                  </div>
+                  <label className="mt-3 block text-xs font-semibold text-slate-500">
+                    Destination currency
+                    <select
+                      aria-label="Destination currency"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800"
+                      onChange={(event) => setFxCurrency(event.target.value)}
+                      value={fxCurrency}
+                    >
+                      {["THB", "USD", "EUR", "GBP", "KHR", "JPY"].map((code) => (
+                        <option key={code} value={code}>
+                          {code}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="mt-3 rounded-xl bg-indigo-50/70 px-3 py-3 text-sm text-indigo-950">
+                    {hasFxRate
+                      ? `${formatMoney(Number(fxAmount) * Number(fxRate), fxCurrency)} at your entered rate (${fxRate} ${fxCurrency} per 1 ${activeCurrency}).`
+                      : "Add an exchange rate above to calculate an estimated conversion."}
+                  </p>
+                </section>
+
               </div>
 
               <div className="space-y-6">
-                <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                <section
+                  className="scroll-mt-6 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+                  ref={expenseFormRef}
+                >
                   <div>
-                    <h2 className="text-lg font-bold">
+                    <h2 className="text-lg font-bold text-slate-950">
                       {editingExpenseId !== null ? "Edit expense" : "Add an expense"}
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
@@ -789,6 +1108,7 @@ function Budget() {
                       Expense name
                       <input
                         className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                        id="expense-description"
                         onChange={(event) => setExpenseName(event.target.value)}
                         placeholder="e.g. Museum tickets"
                         required
@@ -902,8 +1222,23 @@ function Budget() {
                   </form>
                 </section>
 
-                <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                  <h2 className="text-lg font-bold">Trip wallet</h2>
+                <section
+                  className="scroll-mt-6 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+                  id="trip-wallet"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl bg-teal-50 p-2 text-teal-800">
+                      <Wallet aria-hidden="true" size={18} />
+                    </span>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-950">
+                        Trip wallet
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Real balance from your trip wallet
+                      </p>
+                    </div>
+                  </div>
                   {activeTripWallet ? (
                     <>
                       <p className="mt-2 text-2xl font-bold">
@@ -1012,6 +1347,30 @@ function Budget() {
                     </p>
                   )}
                 </section>
+
+              </div>
+            </section>
+
+            <section
+              className="scroll-mt-6 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6"
+              id="group-ledger"
+            >
+              <div className="flex items-start gap-3">
+                <span className="rounded-xl bg-slate-100 p-2 text-slate-500">
+                  <CreditCard aria-hidden="true" size={18} />
+                </span>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-950">
+                    Group ledger &amp; payment methods
+                  </h2>
+                  <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+                    This backend currently provides individual trip expenses,
+                    trip-wallet activity, and personal wallets. Shared member
+                    balances, settlement actions, and stored card details are
+                    not available here, so this dashboard does not display
+                    invented split amounts or card numbers.
+                  </p>
+                </div>
               </div>
             </section>
           </>

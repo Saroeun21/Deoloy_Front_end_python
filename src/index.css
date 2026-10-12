@@ -17,6 +17,63 @@
   flex: 0 0 auto;
 }
 
+.place-detail-gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+
+.place-detail-gallery__hero {
+  height: 20rem;
+}
+
+.place-detail-gallery__tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.place-detail-gallery__tile {
+  height: 9rem;
+  min-height: 0;
+}
+
+@media (min-width: 640px) {
+  .place-detail-gallery__hero {
+    height: 24rem;
+  }
+
+  .place-detail-gallery__tile {
+    height: 12rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .place-detail-gallery {
+    height: 26.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .place-detail-gallery > * {
+    min-height: 0;
+  }
+
+  .place-detail-gallery__hero,
+  .place-detail-gallery__tiles {
+    height: 100%;
+  }
+
+  .place-detail-gallery__tiles {
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .place-detail-gallery__tile {
+    height: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .popular-destinations-track {
     animation: none;

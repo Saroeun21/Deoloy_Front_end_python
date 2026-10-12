@@ -13,11 +13,12 @@ import DestinationCard, {
   IconSparkles,
   IconChevronRight
 } from '../../features/discovery/page/components/DestinationCard';
+import { getPlaceDetailPath } from '../../features/discovery/page/placeRoutes';
+import { getSavedItemKey } from '../../features/discovery/page/components/savedItemKey';
 
 export default function Home({
-  savedPlaces = [],
+  savedItemKeys = [],
   onToggleSave = () => {},
-  canSavePlaces = false,
   savingPlaceIds = [],
 }) {
   const navigate = useNavigate();
@@ -50,14 +51,12 @@ export default function Home({
       if (destinationResult.status === 'fulfilled') {
         setDestinations(destinationResult.value.map((destination) => ({
           ...destination,
+          kind: 'destination',
           title: destination.country
             ? `${destination.name}, ${destination.country}`
             : destination.name,
           desc: destination.description || '',
           img: destination.image || '',
-          avgCost: destination.average_daily_cost == null
-            ? ''
-            : `${destination.average_daily_cost} ${destination.currency || ''}/day avg`.trim(),
           type: 'Destinations',
         })));
       } else {
@@ -71,6 +70,14 @@ export default function Home({
       setDestinationsLoading(false);
 
       if (placesResult.status === 'fulfilled') {
+        const destinationDailyCosts = new Map(
+          destinationResult.status === 'fulfilled'
+            ? destinationResult.value.map((destination) => [
+                String(destination.id),
+                destination.average_daily_cost_usd,
+              ])
+            : [],
+        );
         const destinationNames = new Map(
           destinationResult.status === 'fulfilled'
             ? destinationResult.value.map((destination) => [
@@ -79,9 +86,36 @@ export default function Home({
               ])
             : [],
         );
+        const destinationCurrencies = new Map(
+          destinationResult.status === 'fulfilled'
+            ? destinationResult.value.map((destination) => [
+                String(destination.id),
+                destination.currency,
+              ])
+            : [],
+        );
+        const destinationDetails = new Map(
+          destinationResult.status === 'fulfilled'
+            ? destinationResult.value.map((destination) => [
+                String(destination.id),
+                {
+                  currency: destination.currency,
+                  language: destination.language,
+                  best_time: destination.best_time,
+                },
+              ])
+            : [],
+        );
         setRecommendations(placesResult.value.map((place) => ({
           ...place,
           kind: 'place',
+          estimated_daily_cost_usd: destinationDailyCosts.get(
+            String(place.destination_id),
+          ),
+          currency: destinationCurrencies.get(
+            String(place.destination_id),
+          ),
+          ...destinationDetails.get(String(place.destination_id)),
           title: place.name,
           desc: place.description || '',
           location:
@@ -115,10 +149,6 @@ export default function Home({
     setRecommendationsError('');
     setReloadKey((key) => key + 1);
   }
-
-  const safeSavedPlaces = Array.isArray(savedPlaces) ? savedPlaces : [];
-  const isSaved = (id) =>
-    safeSavedPlaces.some((savedId) => String(savedId) === String(id));
 
   const openDestinationSearch = () => {
     const query = searchQuery.trim();
@@ -322,14 +352,17 @@ export default function Home({
                 <div key={item.id} className="w-[min(85vw,19rem)] shrink-0">
                   <DestinationCard 
                     item={item}
+                    isSaved={savedItemKeys.includes(getSavedItemKey(item))}
+                    onToggleSave={onToggleSave}
+                    isSaving={savingPlaceIds.includes(getSavedItemKey(item))}
                     onAddToTrips={() =>
                       navigate('/trips', { state: { addDestination: item } })
                     }
-                    onClick={() =>
-                      navigate(`/places/${encodeURIComponent(String(item.id))}`, {
-                        state: { destination: item },
-                      })
-                    }
+                      onClick={() =>
+                        navigate(getPlaceDetailPath(item), {
+                          state: { destination: item },
+                        })
+                      }
                   />
                 </div>
               )) : (
@@ -345,7 +378,20 @@ export default function Home({
             >
               {!destinationsLoading && !destinationsError && filteredDestinations.map(item => (
                 <div key={`duplicate-${item.id}`} className="w-[min(85vw,19rem)] shrink-0">
-                  <DestinationCard item={item} />
+                  <DestinationCard
+                    item={item}
+                    isSaved={savedItemKeys.includes(getSavedItemKey(item))}
+                    onToggleSave={onToggleSave}
+                    isSaving={savingPlaceIds.includes(getSavedItemKey(item))}
+                    onAddToTrips={() =>
+                      navigate('/trips', { state: { addDestination: item } })
+                    }
+                    onClick={() =>
+                      navigate(getPlaceDetailPath(item), {
+                        state: { destination: item },
+                      })
+                    }
+                  />
                 </div>
               ))}
             </div>
@@ -401,17 +447,14 @@ export default function Home({
             <PlaceCard
               key={place.id}
               place={place}
-              isSaved={isSaved(place.id)}
+              isSaved={savedItemKeys.includes(getSavedItemKey(place))}
               onToggleSave={onToggleSave}
-              showSave={canSavePlaces}
-              isSaving={savingPlaceIds.some(
-                (savingId) => String(savingId) === String(place.id),
-              )}
+              isSaving={savingPlaceIds.includes(getSavedItemKey(place))}
               onAddToTrips={() =>
                 navigate('/trips', { state: { addDestination: place } })
               }
               onClick={() =>
-                navigate(`/places/${encodeURIComponent(String(place.id))}`, {
+                navigate(getPlaceDetailPath(place), {
                   state: { destination: place },
                 })
               }

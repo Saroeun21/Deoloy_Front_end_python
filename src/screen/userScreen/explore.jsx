@@ -4,13 +4,15 @@ import DestinationCard from '../../features/discovery/page/components/Destinatio
 import { getHomeDestinations } from '../../services/api/homeApi';
 import { fetchPlaces } from '../../services/api/placeapi';
 import { searchWikipediaPlaces } from '../../services/api/wikipediaPlaces';
+import { getPlaceDetailPath } from '../../features/discovery/page/placeRoutes';
+import { getSavedItemKey } from '../../features/discovery/page/components/savedItemKey';
 
 const CATEGORIES = ['All', 'Destinations', 'Places'];
+const EMPTY_SAVED_KEYS = [];
 
 function Explore({
-  savedPlaces = [],
+  savedItemKeys = EMPTY_SAVED_KEYS,
   onToggleSave = () => {},
-  canSavePlaces = false,
   savingPlaceIds = [],
 }) {
   const navigate = useNavigate();
@@ -43,6 +45,15 @@ function Explore({
         return;
       }
 
+      const destinationDailyCosts = new Map(
+        (destinationResult.status === 'fulfilled'
+          ? destinationResult.value
+          : []
+        ).map((destination) => [
+          String(destination.id),
+          destination.average_daily_cost_usd,
+        ]),
+      );
       const destinationData =
         destinationResult.status === 'fulfilled'
           ? destinationResult.value.map((destination) => ({
@@ -53,10 +64,6 @@ function Explore({
                 : destination.name,
               desc: destination.description || '',
               img: destination.image || '',
-              avgCost:
-                destination.average_daily_cost == null
-                  ? ''
-                  : `${destination.average_daily_cost} ${destination.currency || ''}/day avg`.trim(),
               type: 'Destinations',
             }))
           : [];
@@ -69,11 +76,40 @@ function Explore({
           [destination.name, destination.country].filter(Boolean).join(', '),
         ]),
       );
+      const destinationCurrencies = new Map(
+        (destinationResult.status === 'fulfilled'
+          ? destinationResult.value
+          : []
+        ).map((destination) => [
+          String(destination.id),
+          destination.currency,
+        ]),
+      );
+      const destinationDetails = new Map(
+        (destinationResult.status === 'fulfilled'
+          ? destinationResult.value
+          : []
+        ).map((destination) => [
+          String(destination.id),
+          {
+            currency: destination.currency,
+            language: destination.language,
+            best_time: destination.best_time,
+          },
+        ]),
+      );
       const placeData =
         placeResult.status === 'fulfilled'
           ? placeResult.value.map((place) => ({
               ...place,
               kind: 'place',
+              estimated_daily_cost_usd: destinationDailyCosts.get(
+                String(place.destination_id),
+              ),
+              currency: destinationCurrencies.get(
+                String(place.destination_id),
+              ),
+              ...destinationDetails.get(String(place.destination_id)),
               title: place.name,
               desc: place.description || '',
               location:
@@ -211,7 +247,7 @@ function Explore({
               Explore Destinations & Places
             </h1>
             <p className="text-sm text-teal-100/80 sm:text-base">
-              Browse destinations and places from the API, or search Wikipedia for more ideas.
+              Browse destinations and places from the API, or search online for more ideas.
             </p>
           </div>
           <div className="absolute -bottom-10 -right-10 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
@@ -258,7 +294,7 @@ function Explore({
                 disabled={!query.trim() || isSearchingOnline}
                 className="rounded-2xl bg-teal-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSearchingOnline ? 'Searching…' : 'Search Wikipedia'}
+                {isSearchingOnline ? 'Searching…' : 'Search online places'}
               </button>
             </form>
 
@@ -267,7 +303,7 @@ function Explore({
               <span className="text-teal-700">
                 {onlineResults ? onlineResults.length : filteredPlaces.length}
               </span>{' '}
-              {onlineResults ? 'Wikipedia places' : 'API results'}
+              {onlineResults ? 'Online places' : 'API results'}
             </div>
           </div>
 
@@ -337,7 +373,7 @@ function Explore({
                     : `Online place results for “${query.trim()}”`}
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Descriptions come from Wikipedia. Daily budgets are estimates, not live prices.
+                  Daily budgets are approximate planning estimates, not live prices.
                 </p>
               </div>
               <button
@@ -354,39 +390,40 @@ function Explore({
             </div>
 
             {onlineResults.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {onlineResults.map((place) => (
-                  <div key={place.id} className="space-y-2">
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    Showing {onlineResults.length} places
+                    {query.trim() ? ` for “${query.trim()}”` : ''}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span>Typical daily budget</span>
+                    <span className="rounded-lg bg-slate-100 px-2.5 py-1.5 font-bold text-slate-700">
+                      USD Base
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {onlineResults.map((place) => (
                     <DestinationCard
+                      key={place.id}
                       item={place}
-                      isSaved={savedPlaces.some(
-                        (savedId) => String(savedId) === String(place.id),
-                      )}
+                      isSaved={savedItemKeys.includes(getSavedItemKey(place))}
                       onToggleSave={onToggleSave}
-                      showSave={canSavePlaces && place.kind === 'place'}
-                      isSaving={savingPlaceIds.some(
-                        (savingId) => String(savingId) === String(place.id),
-                      )}
+                      isSaving={savingPlaceIds.includes(getSavedItemKey(place))}
                       onAddToTrips={() =>
                         navigate('/trips', { state: { addDestination: place } })
                       }
                       onClick={() =>
-                        navigate(`/places/${encodeURIComponent(place.id)}`, {
+                        navigate(getPlaceDetailPath(place), {
                           state: { destination: place },
                         })
                       }
                     />
-                    <a
-                      href={place.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-medium text-teal-700 underline"
-                    >
-                      Source: Wikipedia
-                    </a>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600">
                 No online places matched that search. Try a city or landmark name.
@@ -419,34 +456,44 @@ function Explore({
             ))}
           </div>
         ) : onlineResults === null && isSearchingOnline ? null : onlineResults === null && filteredPlaces.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredPlaces.map((place) => (
-              <div
-                key={place.id}
-                className="transition-transform hover:-translate-y-1"
-              >
-                <DestinationCard
-                  item={place}
-                  isSaved={savedPlaces.some(
-                    (savedId) => String(savedId) === String(place.id),
-                  )}
-                  onToggleSave={onToggleSave}
-                  showSave={canSavePlaces && place.kind === 'place'}
-                  isSaving={savingPlaceIds.some(
-                    (savingId) => String(savingId) === String(place.id),
-                  )}
-                  onAddToTrips={() =>
-                    navigate('/trips', { state: { addDestination: place } })
-                  }
-                  onClick={() =>
-                    navigate(`/places/${encodeURIComponent(String(place.id))}`, {
-                      state: { destination: place },
-                    })
-                  }
-                />
+          <>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                Showing {filteredPlaces.length} destinations &amp; places
+                {query.trim() ? ` matching “${query.trim()}”` : ''}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>Typical daily budget</span>
+                <span className="rounded-lg bg-slate-100 px-2.5 py-1.5 font-bold text-slate-700">
+                  USD Base
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredPlaces.map((place) => (
+                <div
+                  key={`${place.kind}-${place.id}`}
+                  className="transition-transform hover:-translate-y-1"
+                >
+                  <DestinationCard
+                    item={place}
+                    isSaved={savedItemKeys.includes(getSavedItemKey(place))}
+                    onToggleSave={onToggleSave}
+                    isSaving={savingPlaceIds.includes(getSavedItemKey(place))}
+                    onAddToTrips={() =>
+                      navigate('/trips', { state: { addDestination: place } })
+                    }
+                    onClick={() =>
+                      navigate(getPlaceDetailPath(place), {
+                        state: { destination: place },
+                      })
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         ) : onlineResults === null && !isLoading && !apiError ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
             <p className="text-base font-semibold text-slate-700">

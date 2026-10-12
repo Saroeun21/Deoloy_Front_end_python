@@ -13,6 +13,7 @@ const COUNTRY_ALIASES = new Map([
   ['us', 'United States'],
   ['u.s.a.', 'United States'],
   ['usa', 'United States'],
+  ['united state', 'United States'],
   ['united states of america', 'United States'],
   ['uk', 'United Kingdom'],
   ['u.k.', 'United Kingdom'],
@@ -33,6 +34,22 @@ const NON_DESTINATION_ENTITY_TYPES = new Set([
   'Q7188',
   'Q15925198',
 ]);
+const NON_DESTINATION_ARTICLE =
+  /^(?:flag|coat of arms|national anthem|politics|government|foreign relations|international relations|elections?|list of|administrative divisions|demographics|economy|military of)\b/i;
+const NON_DESTINATION_TITLE =
+  /\b(?:congress|senate|house of representatives|supreme court|political party|government agency|cabinet|parliament|legislature|department of [A-Z]|armed forces)\b/i;
+const NON_DESTINATION_SUMMARY =
+  /\b(?:is a political party|is a politician|is a government agency|is the government of|is the national legislature|is the legislature of|is a legislative body|is (?:the )?(?:upper|lower) house of|political system of|politics of [A-Z]|election(?:s)? in [A-Z]|flag of [A-Z]|national anthem of [A-Z])\b/i;
+
+function normalizeCountryName(name) {
+  return name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+    .replace(/[.'’]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
 
 function isPoliticalArticle(page, entities) {
   const title = page.title.trim();
@@ -41,26 +58,26 @@ function isPoliticalArticle(page, entities) {
   const instanceIds = (entity?.claims?.P31 || [])
     .map((claim) => claim.mainsnak?.datavalue?.value?.id)
     .filter(Boolean);
-
   return (
     instanceIds.some((id) => NON_DESTINATION_ENTITY_TYPES.has(id)) ||
-    /^(?:politics|political system|government|foreign relations|international relations|elections?|list of (?:politicians|political parties))\b/i.test(
-      title,
-    ) ||
-    /\b(?:is a political party|is a politician|is a government agency|is the government of|political system of|politics of [A-Z]|election(?:s)? in [A-Z])\b/i.test(
-      summary,
-    )
+    instanceIds.some((id) => NON_DESTINATION_ENTITY_TYPES.has(id)) ||
+    NON_DESTINATION_ARTICLE.test(title) ||
+    NON_DESTINATION_TITLE.test(title) ||
+    NON_DESTINATION_SUMMARY.test(summary)
   );
 }
 
 export async function findCountry(query, signal) {
-  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const normalizedQuery = normalizeCountryName(query);
   if (countrySearchCache.has(normalizedQuery)) {
     return countrySearchCache.get(normalizedQuery);
   }
 
-  const canonicalName = COUNTRY_ALIASES.get(normalizedQuery) || query.trim();
-  const normalizedCanonicalName = canonicalName.toLocaleLowerCase();
+  const canonicalName =
+    COUNTRY_ALIASES.get(query.trim().toLocaleLowerCase()) ||
+    COUNTRY_ALIASES.get(normalizedQuery) ||
+    query.trim();
+  const normalizedCanonicalName = normalizeCountryName(canonicalName);
   const searchPromise = fetchCountry(
     canonicalName,
     normalizedCanonicalName,
@@ -93,13 +110,32 @@ async function fetchCountry(query, normalizedQuery, signal) {
   }
 
   const data = await response.json();
-  const country = data.search?.find(
-    (item) =>
-      item.label?.trim().toLocaleLowerCase() === normalizedQuery &&
-      /\bcountry\b|\bsovereign state\b|\bisland nation\b/i.test(
-        item.description || '',
-      ),
+  const matches = (data.search || []).filter((item) =>
+    /\bcountry\b|\bsovereign state\b|\bisland nation\b/i.test(
+      item.description || '',
+    ),
   );
+  const queryWords = normalizedQuery.split(' ');
+  const country =
+    matches.find(
+      (item) => normalizeCountryName(item.label || '') === normalizedQuery,
+    ) ||
+    (queryWords.length > 1
+      ? matches.find((item) => {
+          const labelWords = normalizeCountryName(item.label || '').split(' ');
+          return (
+            labelWords.length === queryWords.length &&
+            queryWords.every(
+              (word, index) =>
+                labelWords[index] === word ||
+                (index === queryWords.length - 1 &&
+                  word.length >= 3 &&
+                  (labelWords[index].startsWith(word) ||
+                    labelWords[index] === `${word}s`)),
+            )
+          );
+        })
+      : null);
 
   return country ? { id: country.id, name: country.label } : null;
 }
@@ -177,10 +213,12 @@ export async function searchPlacesInCountry(
   country,
   signal,
   searches = [
-    `landmarks in ${country.name}`,
+    `famous landmarks in ${country.name}`,
+    `top tourist attractions in ${country.name}`,
     `tourist attractions in ${country.name}`,
     `national parks in ${country.name}`,
-    `historic sites and monuments in ${country.name}`,
+    `UNESCO World Heritage Sites in ${country.name}`,
+    `best places to visit in ${country.name}`,
   ],
 ) {
   const results = await Promise.all(
@@ -188,14 +226,18 @@ export async function searchPlacesInCountry(
   );
   const candidates = new Map();
 
-  results.forEach(({ pages }) => {
+  results.forEach(({ pages }, searchIndex) => {
     pages.forEach((page) => {
       if (
         isEarthPlace(page) &&
-        page.title.toLocaleLowerCase() !== country.name.toLocaleLowerCase() &&
+        normalizeCountryName(page.title) !==
+          normalizeCountryName(country.name) &&
         !candidates.has(page.pageid)
       ) {
-        candidates.set(page.pageid, page);
+        candidates.set(page.pageid, {
+          ...page,
+          searchRank: searchIndex * 100 + page.index,
+        });
       }
     });
   });
@@ -207,7 +249,7 @@ export async function searchPlacesInCountry(
   );
 
   return {
-    pages: pages.sort((left, right) => left.index - right.index),
+    pages: pages.sort((left, right) => left.searchRank - right.searchRank),
     continuation: results
       .filter((result) => result.continuation)
       .map(({ query, continuation }) => ({ query, continuation })),

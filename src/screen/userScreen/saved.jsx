@@ -3,9 +3,13 @@ import { LoaderCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DestinationCard from "../../features/discovery/page/components/DestinationCard";
 import { fetchPlaces } from "../../services/api/placeapi.js";
+import { getHomeDestinations } from "../../services/api/homeApi.js";
+import { getPlaceDetailPath } from "../../features/discovery/page/placeRoutes.js";
+import { getSavedItemKey } from "../../features/discovery/page/components/savedItemKey.js";
 
 function Saved({
   savedPlaces = [],
+  savedCatalogItems = [],
   onToggleSave = () => {},
   savingPlaceIds = [],
   savedPlacesLoading = false,
@@ -13,53 +17,122 @@ function Saved({
 }) {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
+  const [destinations, setDestinations] = useState([]);
   const [loadingPlaces, setLoadingPlaces] = useState(true);
   const [placesError, setPlacesError] = useState("");
+  const [destinationsError, setDestinationsError] = useState("");
+  const [placesReloadKey, setPlacesReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadPlaces() {
-      try {
-        const result = await fetchPlaces();
-        if (!cancelled) {
-          setPlaces(result);
-          setPlacesError("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Could not load places for saved list:", error);
-          setPlacesError(
-            error instanceof Error ? error.message : "Could not load places.",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoadingPlaces(false);
+      setLoadingPlaces(true);
+      setPlacesError("");
+      setDestinationsError("");
+      const [placesResult, destinationsResult] = await Promise.allSettled([
+        fetchPlaces(),
+        getHomeDestinations(100),
+      ]);
+      if (cancelled) return;
+
+      if (placesResult.status === "fulfilled") {
+        setPlaces(placesResult.value);
+      } else {
+        console.error(
+          "Could not load places for saved list:",
+          placesResult.reason,
+        );
+        setPlacesError(
+          placesResult.reason instanceof Error
+            ? placesResult.reason.message
+            : "Could not load places.",
+        );
       }
+      if (destinationsResult.status === "fulfilled") {
+        setDestinations(destinationsResult.value);
+      } else {
+        console.error(
+          "Could not load destinations for saved list:",
+          destinationsResult.reason,
+        );
+        setDestinationsError(
+          destinationsResult.reason instanceof Error
+            ? destinationsResult.reason.message
+            : "Could not load destinations.",
+        );
+      }
+      setLoadingPlaces(false);
     }
 
     void loadPlaces();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [placesReloadKey]);
 
   const savedItems = useMemo(() => {
+    const destinationDailyCosts = new Map(
+      destinations.map((destination) => [
+        String(destination.id),
+        destination.average_daily_cost_usd,
+      ]),
+    );
+    const destinationsByTitle = new Map(
+      destinations.flatMap((destination) => {
+        const title = destination.country
+          ? `${destination.name}, ${destination.country}`
+          : destination.name;
+        return [
+          [title.toLocaleLowerCase(), destination],
+          [destination.name.toLocaleLowerCase(), destination],
+        ];
+      }),
+    );
     const savedIds = new Set(savedPlaces.map((id) => String(id)));
-    return places
+    const savedBackendPlaces = places
       .filter((place) => savedIds.has(String(place.id)))
       .map((place) => ({
         ...place,
         title: place.name,
         desc: place.description || "",
-        img: place.image || "",
+        img: place.image || place.image_url || "",
+        location: place.address || "",
         tags: place.category ? [place.category] : [],
         kind: "place",
+        estimated_daily_cost_usd: destinationDailyCosts.get(
+          String(place.destination_id),
+        ),
       }));
-  }, [places, savedPlaces]);
+    const savedExternalItems = savedCatalogItems.map((record) => {
+      const matchedDestination = destinationsByTitle.get(
+        String(record.title || "").toLocaleLowerCase(),
+      );
+      return {
+        ...record,
+        id: record.item_key,
+        kind: record.item_type === "destination" ? "destination" : "place",
+        title: record.title,
+        name: record.title,
+        desc: record.description || "",
+        description: record.description || "",
+        img: record.image || "",
+        image: record.image || "",
+        location: record.location || "",
+        sourceUrl: record.source_url || "",
+        item_type: record.item_type,
+        item_key: record.item_key,
+        average_daily_cost_usd:
+          record.item_type === "destination"
+            ? matchedDestination?.average_daily_cost_usd
+            : undefined,
+      };
+    });
+    return [...savedBackendPlaces, ...savedExternalItems];
+  }, [places, destinations, savedPlaces, savedCatalogItems]);
 
   const isLoading = loadingPlaces || savedPlacesLoading;
-  const error = savedPlacesError || placesError;
+  const error = savedPlacesError || placesError || destinationsError;
 
   return (
     <main className="min-h-full bg-slate-50 p-5 text-slate-800 sm:p-8">
@@ -69,19 +142,28 @@ function Saved({
             Your shortlist
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight">
-            Saved places
+            Saved items
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Keep the places you love handy while you plan.
+            Keep destinations and places you love handy while you plan.
           </p>
         </header>
 
-        {placesError && (
+        {error && (
           <div
             className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             role="alert"
           >
-            {placesError}
+            <p>{error}</p>
+            {(placesError || destinationsError) && (
+              <button
+                className="mt-2 font-semibold underline underline-offset-2"
+                onClick={() => setPlacesReloadKey((key) => key + 1)}
+                type="button"
+              >
+                Retry loading saved item data
+              </button>
+            )}
           </div>
         )}
 
@@ -97,19 +179,16 @@ function Saved({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {savedItems.map((place) => (
               <DestinationCard
-                key={place.id}
+                key={getSavedItemKey(place)}
                 item={place}
-                isSaved
-                showSave
-                isSaving={savingPlaceIds.some(
-                  (savingId) => String(savingId) === String(place.id),
-                )}
+                isSaved={true}
+                isSaving={savingPlaceIds.includes(getSavedItemKey(place))}
                 onToggleSave={onToggleSave}
                 onAddToTrips={() =>
                   navigate("/trips", { state: { addDestination: place } })
                 }
                 onClick={() =>
-                  navigate(`/places/${encodeURIComponent(String(place.id))}`, {
+                  navigate(getPlaceDetailPath(place), {
                     state: { destination: place },
                   })
                 }

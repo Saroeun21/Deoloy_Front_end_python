@@ -1,5 +1,14 @@
-const BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/v1"
+).replace(/\/+$/, "");
 const UNAUTHORIZED_EVENT = "tripos:unauthorized";
+
+export function resolveApiUrl(path) {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  return new URL(path, `${new URL(BASE_URL).origin}/`).toString();
+}
 
 function getAuthHeaders() {
   const token =
@@ -29,14 +38,22 @@ function formatErrorDetail(responseBody) {
 
 export async function apiRequest(path, options = {}) {
   const hasBody = options.body !== undefined;
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      ...getAuthHeaders(),
-      ...(hasBody ? { "Content-Type": "application/json" } : {}),
-      ...options.headers,
-    },
-  });
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        ...getAuthHeaders(),
+        ...(hasBody ? { "Content-Type": "application/json" } : {}),
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? ` ${error.message}` : "";
+    throw new Error(
+      `Cannot reach the TripOS API at ${BASE_URL}. Check that the backend is running.${reason}`,
+    );
+  }
 
   if (!response.ok) {
     const detail = formatErrorDetail(await response.text());
@@ -44,10 +61,14 @@ export async function apiRequest(path, options = {}) {
       localStorage.removeItem("accessToken");
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }
+    const serverHint =
+      response.status >= 500
+        ? " The backend could not complete the request; check its terminal for database errors."
+        : "";
     throw new Error(
       `API request failed (HTTP ${response.status})${
         detail ? `: ${detail}` : "."
-      }`,
+      }${serverHint}`,
     );
   }
 

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Bus,
+  Bell,
   Check,
   CheckSquare,
   ChevronDown,
@@ -24,6 +25,7 @@ import checklistItemApi from "../../../services/api/check_list_item_api.js";
 import packingApi from "../../../services/api/packing_api.js";
 import packingListApi from "../../../services/api/packing_list_api.js";
 import transportApi from "../../../services/api/transport_api.js";
+import DocumentUploader from "./DocumentUploader.jsx";
 
 const FIELD_CLASS =
   "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 disabled:opacity-60";
@@ -245,6 +247,7 @@ function TripPlanningPanel({ trip, resources, onReload }) {
     return {
       accommodations: resources.accommodations.filter(tripMatches),
       transports: resources.transports.filter(tripMatches),
+      reminders: resources.reminders.filter(tripMatches),
       checklists: resources.checklists.filter(tripMatches),
       checklistItems: resources.checklistItems.filter((item) =>
         checklistIds.has(String(item.checklist_id)),
@@ -487,6 +490,12 @@ function TripPlanningPanel({ trip, resources, onReload }) {
         </p>
       )}
 
+      {canUseApi && (
+        <div className="mb-4">
+          <DocumentUploader tripId={tripId} onComplete={onReload} />
+        </div>
+      )}
+
       {actionError && (
         <p className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" role="alert">
           {actionError}
@@ -634,6 +643,42 @@ function TripPlanningPanel({ trip, resources, onReload }) {
             </div>
           ) : (
             <EmptySection text="No accommodation added yet." />
+          )}
+        </section>
+
+        <section className="rounded-xl bg-slate-50 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+              <Bell className="text-teal-700" size={16} />
+              Trip reminders
+            </h3>
+            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+              {tripRecords.reminders.length}
+            </span>
+          </div>
+          {tripRecords.reminders.length ? (
+            <ul className="mt-3 space-y-2">
+              {tripRecords.reminders.map((reminder) => (
+                <li className="rounded-lg bg-white p-3" key={reminder.id}>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {reminder.title}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Due {formatDateTime(reminder.due_date)}
+                    {reminder.status
+                      ? ` · ${String(reminder.status).toLowerCase()}`
+                      : ""}
+                  </p>
+                  {reminder.description && (
+                    <p className="mt-2 text-xs text-slate-600">
+                      {reminder.description}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptySection text="No reminders added yet." />
           )}
         </section>
 

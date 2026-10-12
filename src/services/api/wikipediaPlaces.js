@@ -41,7 +41,7 @@ async function resolveCountry(query, currentCountry, signal) {
 async function searchCountryPlaces(country, searches, signal) {
   const result = await searchPlacesInCountry(country, signal, searches);
   const places = result.pages.map((page) => ({
-    ...mapWikipediaPage(page),
+    ...mapWikipediaPage(page, country.name),
     location: country.name,
   }));
 
