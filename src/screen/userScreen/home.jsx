@@ -16,6 +16,24 @@ import DestinationCard, {
 import { getPlaceDetailPath } from '../../features/discovery/page/placeRoutes';
 import { getSavedItemKey } from '../../features/discovery/page/components/savedItemKey';
 
+const HERO_FALLBACK_SLIDES = [
+  {
+    title: 'Bali, Indonesia',
+    desc: 'Find your next escape among tropical coastlines and island temples.',
+    img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Bangkok, Thailand',
+    desc: 'Explore vibrant city streets, local markets, and golden temples.',
+    img: 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Phuket, Thailand',
+    desc: 'Plan a getaway to bright blue water and peaceful beaches.',
+    img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=85',
+  },
+];
+
 export default function Home({
   savedItemKeys = [],
   onToggleSave = () => {},
@@ -34,6 +52,9 @@ export default function Home({
   const [destinationsError, setDestinationsError] = useState('');
   const [recommendationsError, setRecommendationsError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const [activeHeroSlideIndex, setActiveHeroSlideIndex] = useState(0);
+  const [isHeroFocused, setIsHeroFocused] = useState(false);
+  const [heroTimerResetKey, setHeroTimerResetKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -161,6 +182,34 @@ export default function Home({
     const matchesTab = activeTab === 'All' || item.type?.toLowerCase() === activeTab.toLowerCase();
     return matchesSearch && matchesTab;
   });
+  const apiHeroSlides = [...destinations, ...recommendations]
+    .filter((destination) => destination.img)
+    .filter(
+      (destination, index, slides) =>
+        slides.findIndex((slide) => slide.img === destination.img) === index,
+    )
+    .slice(0, 5);
+  const heroSlides = [...apiHeroSlides, ...HERO_FALLBACK_SLIDES]
+    .filter(
+      (slide, index, slides) =>
+        slides.findIndex((candidate) => candidate.img === slide.img) === index,
+    )
+    .slice(0, 5);
+  const activeHeroSlide = heroSlides.length
+    ? heroSlides[activeHeroSlideIndex % heroSlides.length]
+    : null;
+
+  useEffect(() => {
+    if (isHeroFocused || heroSlides.length < 2) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setActiveHeroSlideIndex((index) => (index + 1) % heroSlides.length);
+    }, 2000);
+
+    return () => window.clearInterval(timer);
+  }, [heroSlides.length, heroTimerResetKey, isHeroFocused]);
 
   const seekPopularDestinations = (toEnd) => {
     const carousel = popularDestinationsRef.current;
@@ -187,34 +236,73 @@ export default function Home({
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-8 pb-16 min-h-screen bg-slate-50 text-slate-800">
-      
+    <div className="space-y-8 pb-16 min-h-screen bg-slate-50 text-slate-800">
       {/* Hero Banner */}
-      <section className="relative rounded-3xl bg-gradient-to-br from-teal-900 via-teal-800 to-slate-900 text-white p-6 md:p-10 overflow-hidden shadow-xl">
-        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-4">
+      <section
+        className="relative flex min-h-[70dvh] items-center justify-center overflow-hidden bg-[#031e1c] px-6 py-12 text-white shadow-xl md:px-10 md:py-14"
+        onFocusCapture={() => setIsHeroFocused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setIsHeroFocused(false);
+          }
+        }}
+      >
+        <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
+          <div className="home-hero-background absolute">
+            {activeHeroSlide?.img && (
+              <img
+                key={activeHeroSlide.img}
+                src={activeHeroSlide.img}
+                alt=""
+                onError={(event) => {
+                  event.currentTarget.style.display = 'none';
+                }}
+                className="home-hero-image"
+              />
+            )}
+          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(3,30,28,0.48),rgba(3,30,28,0.42))]" />
+        </div>
+        <div className="relative z-10 mx-auto max-w-5xl space-y-5 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-500/30">
             <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
           TRIPOS TRAVEL WORKSPACE
           </div>
           
-          
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-            Where will you <span className="bg-gradient-to-r from-teal-200 to-cyan-400 bg-clip-text text-transparent">go next?</span>
-          </h1>
-          
-          <p className="text-slate-300 text-xs md:text-sm max-w-xl mx-auto">
-            Discover places, plan your trip, manage your budget, and keep everything in one calm workspace.
-          </p>
+          <div key={activeHeroSlide?.img || 'default'} className="home-hero-copy">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+              {activeHeroSlide ? (
+                <>
+                  Discover{' '}
+                  <span className="bg-gradient-to-r from-teal-200 to-cyan-400 bg-clip-text text-transparent">
+                    {activeHeroSlide.title}
+                  </span>
+                </>
+              ) : (
+                <>
+                  Where will you{' '}
+                  <span className="bg-gradient-to-r from-teal-200 to-cyan-400 bg-clip-text text-transparent">
+                    go next?
+                  </span>
+                </>
+              )}
+            </h1>
+
+            <p className="text-slate-300 text-xs md:text-sm max-w-xl mx-auto">
+              {activeHeroSlide?.desc ||
+                'Discover places, plan your trip, manage your budget, and keep everything in one calm workspace.'}
+            </p>
+          </div>
 
           {/* Search Box */}
-          <div className="mt-6 bg-white rounded-2xl p-3 text-slate-800 shadow-2xl space-y-3 text-left">
-            <div className="flex items-center gap-1 border-b border-slate-100 pb-2 overflow-x-auto text-xs font-semibold">
+          <div className="mt-7 space-y-4 rounded-2xl bg-white p-5 text-left text-slate-800 shadow-2xl md:p-6">
+            <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-100 pb-3 text-sm font-semibold">
               {['All', 'Destinations'].map(tab => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
+                  className={`whitespace-nowrap rounded-lg px-4 py-2 transition ${
                     activeTab === tab ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                   }`}
                 >
@@ -223,8 +311,8 @@ export default function Home({
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-              <div className="md:col-span-5 flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-5">
                 <IconSearch />
                 <input 
                   type="text" 
@@ -238,25 +326,25 @@ export default function Home({
                     }
                   }}
                   placeholder="Search destinations... (e.g. China)" 
-                  className="bg-transparent w-full text-xs outline-none font-medium text-slate-800"
+                  className="w-full bg-transparent text-sm font-medium text-slate-800 outline-none"
                 />
               </div>
 
-              <div className="md:col-span-3 flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-3">
                 <IconCalendar />
                 <div>
-                  <div className="text-[9px] uppercase font-bold text-slate-400">DESTINATIONS</div>
-                  <div className="text-xs font-semibold text-slate-700">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">DESTINATIONS</div>
+                  <div className="text-sm font-semibold text-slate-700">
                     {destinationsLoading ? 'Loading…' : destinations.length}
                   </div>
                 </div>
               </div>
 
-              <div className="md:col-span-3 flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-3">
                 <IconUsers />
                 <div>
-                  <div className="text-[9px] uppercase font-bold text-slate-400">PLACES TO VISIT</div>
-                  <div className="text-xs font-semibold text-slate-700">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">PLACES TO VISIT</div>
+                  <div className="text-sm font-semibold text-slate-700">
                     {recommendationsLoading ? 'Loading…' : recommendations.length}
                   </div>
                 </div>
@@ -266,7 +354,7 @@ export default function Home({
                 type="button"
                 onClick={openDestinationSearch}
                 aria-label="Search destinations"
-                className="md:col-span-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl flex items-center justify-center p-3 transition"
+                className="flex items-center justify-center rounded-xl bg-teal-600 p-4 text-white transition hover:bg-teal-700 md:col-span-1"
               >
                 <IconArrowRight />
               </button>
@@ -290,10 +378,39 @@ export default function Home({
             </button>
           </div>
         </div>
+        {heroSlides.length > 1 && (
+          <div
+            aria-label="Hero slides"
+            className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center justify-center"
+            role="group"
+          >
+            {heroSlides.map((slide, index) => (
+              <button
+                key={slide.id ?? slide.img}
+                type="button"
+                aria-label={`Go to slide ${index + 1}`}
+                aria-pressed={index === activeHeroSlideIndex % heroSlides.length}
+                onClick={() => {
+                  setActiveHeroSlideIndex(index);
+                  setHeroTimerResetKey((key) => key + 1);
+                }}
+                className="group grid h-8 w-8 cursor-pointer place-items-center"
+              >
+                <span
+                  className={`h-2 w-2 rounded-full transition duration-300 group-hover:scale-150 ${
+                    index === activeHeroSlideIndex % heroSlides.length
+                      ? 'scale-125 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]'
+                      : 'bg-white/40 group-hover:bg-white/80'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Popular Destinations */}
-      <section className="space-y-4">
+      <section className="mx-6 space-y-4 md:mx-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-xs font-bold text-teal-600 tracking-wider">01 // DESTINATIONS</div>
@@ -400,7 +517,7 @@ export default function Home({
       </section>
 
       {/* AI Feature Banner */}
-      <section className="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
+      <section className="mx-6 flex flex-col items-center justify-between gap-6 rounded-2xl bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 p-6 text-white shadow-lg md:mx-8 md:flex-row">
         <div className="space-y-2 max-w-xl">
           <span className="bg-teal-500/30 text-teal-200 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border border-teal-400/30">
             TripOS Screenshot AI 2.0
@@ -420,7 +537,7 @@ export default function Home({
       </section>
 
       {/* Recommended Places */}
-      <section className="space-y-4">
+      <section className="mx-6 space-y-4 md:mx-8">
         <div>
           <div className="text-xs font-bold text-teal-600 tracking-wider">02 // PLACES</div>
           <h2 className="text-xl font-black text-slate-800">Places to Visit</h2>

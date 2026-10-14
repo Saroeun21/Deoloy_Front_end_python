@@ -153,18 +153,14 @@ function Budget() {
       String(right.transaction_date).localeCompare(String(left.transaction_date)),
     );
 
-  const activeCurrency = activeBudget?.currency || selectedTrip?.currency || "USD";
+  const activeCurrency = "USD";
   const totalSpent = useMemo(
     () =>
       activeExpenses.reduce(
-        (total, expense) =>
-          String(expense.currency || activeCurrency).toUpperCase() ===
-          String(activeCurrency).toUpperCase()
-            ? total + Number(expense.amount || 0)
-            : total,
+        (total, expense) => total + Number(expense.amount || 0),
         0,
       ),
-    [activeExpenses, activeCurrency],
+    [activeExpenses],
   );
   const totalBudget = Number(
     activeBudget?.total_budget ?? selectedTrip?.budget_amount ?? budgetInput ?? 0,
@@ -176,9 +172,7 @@ function Budget() {
     const spent = activeExpenses
       .filter(
         (expense) =>
-          String(expense.budget_category_id) === String(category.id) &&
-          String(expense.currency || activeCurrency).toUpperCase() ===
-            String(activeCurrency).toUpperCase(),
+          String(expense.budget_category_id) === String(category.id),
       )
       .reduce((total, expense) => total + Number(expense.amount || 0), 0);
     return { ...category, spent };
@@ -275,12 +269,12 @@ function Budget() {
       const savedBudget = activeBudget
         ? await budgetApi.update(activeBudget.id, {
             total_budget: amount,
-            currency: activeBudget.currency || selectedTrip.currency,
+          currency: "USD",
           })
         : await budgetApi.create({
             trip_id: selectedTrip.id,
             total_budget: amount,
-            currency: selectedTrip.currency || "USD",
+          currency: "USD",
           });
       setBudgets((current) => [
         ...current.filter((item) => item.id !== savedBudget.id),
@@ -290,6 +284,7 @@ function Budget() {
       if (activeTripWallet) {
         const updatedWallet = await tripWalletApi.update(activeTripWallet.id, {
           target_amount: amount,
+          currency: "USD",
         });
         setTripWallets((current) =>
           current.map((item) =>
@@ -340,7 +335,18 @@ function Budget() {
   }
 
   async function ensureTripWallet() {
-    if (activeTripWallet) return activeTripWallet;
+    if (activeTripWallet) {
+      if (activeTripWallet.currency === "USD") return activeTripWallet;
+      const updatedWallet = await tripWalletApi.update(activeTripWallet.id, {
+        currency: "USD",
+      });
+      setTripWallets((current) =>
+        current.map((item) =>
+          item.id === updatedWallet.id ? updatedWallet : item,
+        ),
+      );
+      return updatedWallet;
+    }
     const createdWallet = await tripWalletApi.create({
       trip_id: selectedTrip.id,
       target_amount: totalBudget,
@@ -680,6 +686,9 @@ function Budget() {
                   <h2 className="mt-1 text-xl font-bold text-slate-950">
                     {selectedTrip.name}
                   </h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Trip budget and expenses are shown in US dollars (USD).
+                  </p>
                 </div>
                 <span
                   className={`rounded-full px-3 py-1.5 text-xs font-bold ${
@@ -899,7 +908,7 @@ function Budget() {
                             </div>
                             <div className="flex shrink-0 flex-col items-end gap-2">
                               <strong>
-                                {formatMoney(expense.amount, expense.currency)}
+                                {formatMoney(expense.amount, "USD")}
                               </strong>
                               <div className="flex gap-2">
                                 <button
@@ -1098,7 +1107,7 @@ function Budget() {
                       <strong>
                         {formatMoney(
                           activeTripWallet.current_amount,
-                          activeTripWallet.currency,
+                          "USD",
                         )}
                       </strong>
                     </p>
@@ -1244,14 +1253,14 @@ function Budget() {
                       <p className="mt-2 text-2xl font-bold">
                         {formatMoney(
                           activeTripWallet.current_amount,
-                          activeTripWallet.currency,
+                          "USD",
                         )}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
                         Target:{" "}
                         {formatMoney(
                           activeTripWallet.target_amount,
-                          activeTripWallet.currency,
+                          "USD",
                         )}
                       </p>
                       <form
@@ -1335,7 +1344,7 @@ function Budget() {
                             {transaction.type === "deposit" ? "+" : "−"}
                             {formatMoney(
                               transaction.amount,
-                              activeTripWallet?.currency,
+                              "USD",
                             )}
                           </span>
                         </li>

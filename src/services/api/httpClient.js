@@ -38,13 +38,17 @@ function formatErrorDetail(responseBody) {
 
 export async function apiRequest(path, options = {}) {
   const hasBody = options.body !== undefined;
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
   let response;
   try {
     response = await fetch(`${BASE_URL}${path}`, {
       ...options,
       headers: {
         ...getAuthHeaders(),
-        ...(hasBody ? { "Content-Type": "application/json" } : {}),
+        ...(hasBody && !isFormData
+          ? { "Content-Type": "application/json" }
+          : {}),
         ...options.headers,
       },
     });

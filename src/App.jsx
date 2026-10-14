@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
-import UserSideBar from './shared/components/UserSideBar';
+import UserNavbar from './shared/components/UserNavbar';
 import Home from './screen/userScreen/home';
 import Explore from './screen/userScreen/explore';
 import Saved from './screen/userScreen/saved';
@@ -9,7 +9,7 @@ import Trip from './screen/userScreen/trip';
 import Budget from './screen/userScreen/budget';
 import AIAssistant from './screen/userScreen/ai_assistant';
 import Notification from './screen/userScreen/notification';
-import Memory from './screen/userScreen/memory';
+import TripMemoriesMain from './features/memories/pages/TripMemoriesMain.jsx';
 import PlacePage from './features/discovery/page/PlacePage';
 import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
@@ -104,7 +104,6 @@ function UserPage() {
       (record) => `${record.item_type}:${String(record.item_key)}`,
     ),
   ];
-
   const handleToggleSave = async (item) => {
     if (!accessToken) {
       navigate('/login', { state: { from: location } });
@@ -178,12 +177,12 @@ function UserPage() {
   };
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-slate-50">
-      <UserSideBar
+    <div className="flex h-dvh flex-col overflow-hidden bg-slate-50">
+      <UserNavbar
         onSignOut={signOut}
         isSignedIn={Boolean(accessToken)}
       />
-      <main className="h-full min-w-0 flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+      <main className="app-main-scroll min-h-0 min-w-0 flex-1 overflow-y-auto">
         {accessToken && savedPlacesError && (
           <div
             className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 md:mx-8"
@@ -322,11 +321,7 @@ function UserPage() {
           />
           <Route
             path="/memories"
-            element={
-              <ProtectedPage>
-                <Memory />
-              </ProtectedPage>
-            }
+            element={<TripMemoriesMain />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

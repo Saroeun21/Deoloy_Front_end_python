@@ -24,6 +24,7 @@ import checklistApi from "../../../services/api/check_list_api.js";
 import checklistItemApi from "../../../services/api/check_list_item_api.js";
 import packingApi from "../../../services/api/packing_api.js";
 import packingListApi from "../../../services/api/packing_list_api.js";
+import reminderApi from "../../../services/api/reminderapi.js";
 import transportApi from "../../../services/api/transport_api.js";
 import DocumentUploader from "./DocumentUploader.jsx";
 
@@ -660,15 +661,28 @@ function TripPlanningPanel({ trip, resources, onReload }) {
             <ul className="mt-3 space-y-2">
               {tripRecords.reminders.map((reminder) => (
                 <li className="rounded-lg bg-white p-3" key={reminder.id}>
-                  <p className="text-sm font-semibold text-slate-800">
-                    {reminder.title}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Due {formatDateTime(reminder.due_date)}
-                    {reminder.status
-                      ? ` · ${String(reminder.status).toLowerCase()}`
-                      : ""}
-                  </p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {reminder.title}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Due {formatDateTime(reminder.due_date)}
+                        {reminder.status
+                          ? ` · ${String(reminder.status).toLowerCase()}`
+                          : ""}
+                      </p>
+                    </div>
+                    <RecordActions
+                      busy={busyKey === `reminder-${reminder.id}`}
+                      canEdit={false}
+                      onDelete={() =>
+                        performDelete(`reminder-${reminder.id}`, () =>
+                          reminderApi.remove(reminder.id),
+                        )
+                      }
+                    />
+                  </div>
                   {reminder.description && (
                     <p className="mt-2 text-xs text-slate-600">
                       {reminder.description}
