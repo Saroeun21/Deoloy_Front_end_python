@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./shared/styles/dark-mode.css";
 
 .app-main-scroll {
   scrollbar-width: none;
@@ -65,6 +66,58 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.tripos-chatbot-launcher-logo {
+  animation: chatbot-logo-float 3.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.tripos-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.tripos-thinking-dots > span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: #0f766e;
+  animation: chatbot-thinking-dot 1s ease-in-out infinite;
+}
+
+.tripos-thinking-dots > span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.tripos-thinking-dots > span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes chatbot-thinking-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-0.25rem);
+  }
+}
+
+@keyframes chatbot-logo-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: translateY(-7px) rotate(-2deg) scale(1.04);
   }
 }
 
@@ -140,7 +193,9 @@
   .popular-destinations-track,
   .home-hero-background,
   .home-hero-image,
-  .home-hero-copy {
+  .home-hero-copy,
+  .tripos-chatbot-launcher-logo,
+  .tripos-thinking-dots > span {
     animation: none;
   }
 }

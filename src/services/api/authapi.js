@@ -14,9 +14,17 @@ export function loginUser(credentials) {
   });
 }
 
+export function loginWithGoogle({ idToken, photoUrl }) {
+  return apiRequest("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken, photo_url: photoUrl }),
+  });
+}
+
 const authApi = {
   register: registerUser,
   login: loginUser,
+  loginWithGoogle,
 };
 
 export default authApi;

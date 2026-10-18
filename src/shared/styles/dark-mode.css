@@ -1,0 +1,205 @@
+html.dark {
+  color-scheme: dark;
+  background: #0b1220;
+}
+
+html.dark body {
+  background-color: #0b1220;
+  color: #e2e8f0;
+}
+
+html.dark [class~="bg-white"],
+html.dark [class~="bg-slate-50"],
+html.dark [class~="bg-slate-50/50"],
+html.dark [class~="bg-slate-50/80"],
+html.dark [class~="bg-[#f8fafc]"] {
+  background-color: #111c2e;
+}
+
+html.dark [class~="bg-slate-100"],
+html.dark [class~="bg-gray-100"],
+html.dark [class~="bg-zinc-100"],
+html.dark [class~="bg-neutral-100"] {
+  background-color: #1e293b;
+}
+
+html.dark [class~="bg-slate-200"],
+html.dark [class~="bg-slate-200/60"],
+html.dark [class~="bg-slate-200/70"],
+html.dark [class~="bg-gray-200"] {
+  background-color: #334155;
+}
+
+html.dark [class~="bg-teal-50"],
+html.dark [class~="bg-emerald-50"],
+html.dark [class~="bg-indigo-50"],
+html.dark [class~="bg-rose-50"],
+html.dark [class~="bg-amber-50"],
+html.dark [class~="bg-violet-50"],
+html.dark [class~="bg-sky-50"] {
+  background-color: #17343b;
+}
+
+html.dark [class~="bg-red-50"],
+html.dark [class~="bg-red-50/80"],
+html.dark [class~="bg-red-100"],
+html.dark [class~="bg-rose-50"],
+html.dark [class~="bg-rose-100"] {
+  background-color: #3a2028;
+}
+
+html.dark [class~="bg-amber-50"],
+html.dark [class~="bg-amber-100"] {
+  background-color: #382f1e;
+}
+
+html.dark [class~="bg-indigo-50"],
+html.dark [class~="bg-indigo-50/60"],
+html.dark [class~="bg-indigo-50/70"],
+html.dark [class~="bg-indigo-100"],
+html.dark [class~="bg-violet-50"] {
+  background-color: #292641;
+}
+
+html.dark [class~="bg-sky-50"] {
+  background-color: #1d3040;
+}
+
+html.dark [class~="bg-emerald-50"],
+html.dark [class~="bg-emerald-50/50"],
+html.dark [class~="bg-emerald-50/70"],
+html.dark [class~="bg-emerald-100"],
+html.dark [class~="bg-emerald-200"],
+html.dark [class~="bg-teal-50/40"],
+html.dark [class~="bg-teal-50/60"],
+html.dark [class~="bg-teal-100"] {
+  background-color: #17343b;
+}
+
+html.dark [class~="bg-white/80"],
+html.dark [class~="bg-white/90"],
+html.dark [class~="bg-white/95"] {
+  background-color: rgb(17 28 46 / 95%);
+}
+
+html.dark [class~="bg-[#f0f7f2]"] {
+  background-color: #172a2b;
+}
+
+html.dark [class~="text-slate-950"],
+html.dark [class~="text-slate-900"],
+html.dark [class~="text-slate-800"],
+html.dark [class~="text-gray-900"],
+html.dark [class~="text-gray-800"],
+html.dark [class~="text-zinc-900"],
+html.dark [class~="text-neutral-900"] {
+  color: #f1f5f9;
+}
+
+html.dark [class~="text-slate-700"],
+html.dark [class~="text-slate-600"],
+html.dark [class~="text-gray-700"],
+html.dark [class~="text-gray-600"] {
+  color: #cbd5e1;
+}
+
+html.dark [class~="text-slate-500"],
+html.dark [class~="text-slate-400"],
+html.dark [class~="text-gray-500"],
+html.dark [class~="text-gray-400"] {
+  color: #94a3b8;
+}
+
+html.dark [class~="border-slate-100"],
+html.dark [class~="border-slate-200"],
+html.dark [class~="border-gray-100"],
+html.dark [class~="border-gray-200"],
+html.dark [class~="border-neutral-200"] {
+  border-color: #334155;
+}
+
+html.dark [class~="border-red-100"],
+html.dark [class~="border-red-200"],
+html.dark [class~="border-rose-200"],
+html.dark [class~="border-amber-100"],
+html.dark [class~="border-amber-200"] {
+  border-color: #62404a;
+}
+
+html.dark [class~="border-emerald-100"],
+html.dark [class~="border-emerald-200"],
+html.dark [class~="border-teal-100"],
+html.dark [class~="border-teal-200"],
+html.dark [class~="border-indigo-100"],
+html.dark [class~="border-violet-100"],
+html.dark [class~="border-sky-100"] {
+  border-color: #334155;
+}
+
+html.dark [class~="text-teal-600"],
+html.dark [class~="text-teal-700"],
+html.dark [class~="text-teal-800"],
+html.dark [class~="text-teal-900"],
+html.dark [class~="text-emerald-600"],
+html.dark [class~="text-emerald-700"],
+html.dark [class~="text-emerald-800"] {
+  color: #6ee7c5;
+}
+
+html.dark [class~="text-indigo-600"],
+html.dark [class~="text-indigo-700"],
+html.dark [class~="text-indigo-800"],
+html.dark [class~="text-indigo-900"],
+html.dark [class~="text-indigo-950"],
+html.dark [class~="text-violet-600"],
+html.dark [class~="text-violet-700"] {
+  color: #c7d2fe;
+}
+
+html.dark [class~="text-red-600"],
+html.dark [class~="text-red-700"],
+html.dark [class~="text-red-800"],
+html.dark [class~="text-red-950"],
+html.dark [class~="text-rose-500"],
+html.dark [class~="text-rose-600"],
+html.dark [class~="text-rose-700"],
+html.dark [class~="text-rose-800"] {
+  color: #fda4af;
+}
+
+html.dark [class~="text-amber-600"],
+html.dark [class~="text-amber-700"],
+html.dark [class~="text-amber-800"],
+html.dark [class~="text-amber-900"],
+html.dark [class~="text-amber-950"] {
+  color: #fcd34d;
+}
+
+html.dark [class~="text-sky-700"],
+html.dark [class~="text-sky-800"] {
+  color: #7dd3fc;
+}
+
+html.dark .navbar-logo-link {
+  width: 12.5rem;
+  height: 4.5rem;
+  justify-content: center;
+  background-color: transparent;
+}
+
+html.dark .navbar-logo-link img {
+  width: 7.33rem;
+  height: 4rem;
+  object-fit: contain;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color-scheme: dark;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8;
+}

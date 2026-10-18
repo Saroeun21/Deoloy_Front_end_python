@@ -4,7 +4,7 @@ import {
   WIKIPEDIA_API_URL,
 } from './wikimediaApi.js';
 import {
-  isEarthPlace,
+  isPlaceArticle,
   mapWikipediaPage,
 } from './wikipediaPlaceMapper.js';
 
@@ -40,10 +40,12 @@ async function resolveCountry(query, currentCountry, signal) {
 
 async function searchCountryPlaces(country, searches, signal) {
   const result = await searchPlacesInCountry(country, signal, searches);
-  const places = result.pages.map((page) => ({
-    ...mapWikipediaPage(page, country.name),
-    location: country.name,
-  }));
+  const places = result.pages
+    .filter(isPlaceArticle)
+    .map((page) => ({
+      ...mapWikipediaPage(page, country.name),
+      location: country.name,
+    }));
 
   return {
     places,
@@ -68,7 +70,7 @@ async function searchGeneralPlaces(query, savedQuery, continuation, signal) {
     signal,
   );
   const pages = Array.isArray(result.pages)
-    ? result.pages.filter(isEarthPlace)
+    ? result.pages.filter(isPlaceArticle)
     : [];
   const places = pages
     .sort((left, right) => left.index - right.index)
@@ -89,7 +91,7 @@ export async function getWikipediaPlaceById(pageId) {
   });
   const pages = Array.isArray(result.pages) ? result.pages : [];
 
-  if (pages.length === 0 || !isEarthPlace(pages[0])) return null;
+  if (pages.length === 0 || !isPlaceArticle(pages[0])) return null;
 
   return mapWikipediaPage(pages[0]);
 }

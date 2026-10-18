@@ -7,12 +7,13 @@ import Explore from './screen/userScreen/explore';
 import Saved from './screen/userScreen/saved';
 import Trip from './screen/userScreen/trip';
 import Budget from './screen/userScreen/budget';
-import AIAssistant from './screen/userScreen/ai_assistant';
 import Notification from './screen/userScreen/notification';
 import TripMemoriesMain from './features/memories/pages/TripMemoriesMain.jsx';
 import PlacePage from './features/discovery/page/PlacePage';
 import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
+import ProfilePage from './features/profile/pages/ProfilePage.jsx';
+import ItineraryPage from './features/itinerary/pages/ItineraryPage.jsx';
 import { AuthProvider } from './app/providers/AuthProviders';
 import { TripStoreProvider } from './features/trips/store/useTripStore.jsx';
 import AIChatAssistant from './features/assistant/components/AIChatAssistant.jsx';
@@ -20,6 +21,7 @@ import { useAuth } from './app/providers/authContext.js';
 import savedPlaceApi from './services/api/saved_api.js';
 import savedItemApi from './services/api/savedItemApi.js';
 import { getSavedItemKey } from './features/discovery/page/components/savedItemKey.js';
+import userApi from './services/api/userApi.js';
 
 function ProtectedPage({ children }) {
   const { accessToken } = useAuth();
@@ -31,8 +33,24 @@ function ProtectedPage({ children }) {
   );
 }
 
+function OpenAssistantRoute() {
+  useEffect(() => {
+    window.setTimeout(
+      () => window.dispatchEvent(new Event('tripos:open-assistant')),
+      0,
+    );
+  }, []);
+  return <Navigate to="/" replace />;
+}
+
 function UserPage() {
-  const { accessToken, signOut } = useAuth();
+  const {
+    accessToken,
+    googlePhotoUrl,
+    signOut,
+    welcomeEmailStatus,
+    dismissWelcomeEmailNotice,
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [savedPlaces, setSavedPlaces] = useState([]);
@@ -42,6 +60,79 @@ function UserPage() {
   const [savedPlacesError, setSavedPlacesError] = useState('');
   const [savingPlaceIds, setSavingPlaceIds] = useState([]);
   const [savedPlacesReloadKey, setSavedPlacesReloadKey] = useState(0);
+  const [profileState, setProfileState] = useState({
+    accessToken: '',
+    user: null,
+    loading: false,
+    error: '',
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!accessToken) return undefined;
+    userApi
+      .getCurrentUser()
+      .then((user) => {
+        if (!cancelled) {
+          setProfileState({ accessToken, user, loading: false, error: '' });
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Could not load account profile:', error);
+        setProfileState({
+          accessToken,
+          user: null,
+          loading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Could not load your profile.',
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+
+  async function handleProfileUpdate(profile) {
+    const updatedUser = await userApi.updateCurrentUser(profile);
+    setProfileState({
+      accessToken,
+      user: updatedUser,
+      loading: false,
+      error: '',
+    });
+    return updatedUser;
+  }
+
+  async function handleAvatarUpdate(file) {
+    const updatedUser = await userApi.uploadAvatar(file);
+    setProfileState({
+      accessToken,
+      user: updatedUser,
+      loading: false,
+      error: '',
+    });
+    return updatedUser;
+  }
+
+  const currentUser =
+    accessToken && profileState.accessToken === accessToken
+      ? profileState.user
+        ? {
+            ...profileState.user,
+            avatar_url: googlePhotoUrl || profileState.user.avatar_url,
+          }
+        : null
+      : null;
+  const profileLoading =
+    Boolean(accessToken) && profileState.accessToken !== accessToken;
+  const profileLoadError =
+    accessToken && profileState.accessToken === accessToken
+      ? profileState.error
+      : '';
 
   useEffect(() => {
     let cancelled = false;
@@ -181,7 +272,34 @@ function UserPage() {
       <UserNavbar
         onSignOut={signOut}
         isSignedIn={Boolean(accessToken)}
+        currentUser={currentUser}
       />
+      {welcomeEmailStatus && (
+        <div
+          className={`mx-4 mt-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm md:mx-8 ${
+            welcomeEmailStatus === 'sent'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-amber-200 bg-amber-50 text-amber-900'
+          }`}
+          role="status"
+        >
+          <span>
+            {welcomeEmailStatus === 'sent'
+              ? 'Welcome email was accepted by Gmail. Check your inbox or spam folder.'
+              : welcomeEmailStatus === 'not_configured'
+                ? 'Welcome email delivery is not configured yet.'
+                : 'The welcome email could not be sent. Please check again later.'}
+          </span>
+          <button
+            aria-label="Dismiss welcome email message"
+            className="shrink-0 font-semibold"
+            onClick={dismissWelcomeEmailNotice}
+            type="button"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <main className="app-main-scroll min-h-0 min-w-0 flex-1 overflow-y-auto">
         {accessToken && savedPlacesError && (
           <div
@@ -260,10 +378,33 @@ function UserPage() {
             }
           />
           <Route
+            path="/profile"
+            element={
+              <ProtectedPage>
+                <ProfilePage
+                  key={currentUser?.id || 'current-user'}
+                  user={currentUser}
+                  loading={profileLoading}
+                  loadError={profileLoadError}
+                  onUpdateProfile={handleProfileUpdate}
+                  onUpdateAvatar={handleAvatarUpdate}
+                />
+              </ProtectedPage>
+            }
+          />
+          <Route
             path="/trips"
             element={
               <ProtectedPage>
                 <Trip />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/itinerary"
+            element={
+              <ProtectedPage>
+                <ItineraryPage />
               </ProtectedPage>
             }
           />
@@ -307,7 +448,7 @@ function UserPage() {
             path="/ai"
             element={
               <ProtectedPage>
-                <AIAssistant />
+                <OpenAssistantRoute />
               </ProtectedPage>
             }
           />

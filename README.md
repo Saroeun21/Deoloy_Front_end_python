@@ -21,9 +21,15 @@ to PostgreSQL directly. Start the backend from
 python -m uvicorn app.main:app --reload
 ```
 
-The frontend defaults to `http://127.0.0.1:8000/api/v1`. To use a different API
-URL, copy `.env.example` to `.env.local`, set `VITE_API_BASE_URL`, and restart
-Vite.
+During local development, the frontend defaults to `/api/v1` and Vite proxies
+API requests to `http://127.0.0.1:8000`, avoiding browser CORS and localhost
+origin mismatches. To use a different API server, set
+`VITE_API_PROXY_TARGET` in the environment or configure the proxy in
+`vite.config.js`, then restart Vite.
+
+For a production build, set `VITE_API_BASE_URL` to the backend's reachable API
+URL (for example, `https://api.example.com/api/v1`) or configure the web server
+to proxy `/api` to the backend.
 
 The backend must have valid PostgreSQL credentials in its `.env` file and its
 migrations must be applied. From the backend project directory:

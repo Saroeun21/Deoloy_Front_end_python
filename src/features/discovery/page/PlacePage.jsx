@@ -1298,7 +1298,7 @@ function PlacePage({
                 <Sparkles size={20} />
               </span>
               <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-teal-100">
-                TripOS AI Optimizer
+                Komsan AI Optimizer
               </p>
               <h2 className="mt-1 text-lg font-bold">
                 Make the most of your day

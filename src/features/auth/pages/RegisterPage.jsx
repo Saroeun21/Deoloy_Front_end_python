@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../app/providers/authContext.js";
+import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 
 export default function RegisterPage() {
-  const { signUp } = useAuth();
+  const { signInWithGoogle, signUp } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -13,6 +14,24 @@ export default function RegisterPage() {
   const [profile, setProfile] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setSubmitting(true);
+    try {
+      await signInWithGoogle();
+      navigate(location.state?.from || "/", { replace: true });
+    } catch (googleError) {
+      console.error("Could not register with Google:", googleError);
+      setError(
+        googleError instanceof Error
+          ? googleError.message
+          : "Could not create your account with Google. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -47,7 +66,7 @@ export default function RegisterPage() {
     <section className="flex min-h-full items-center justify-center bg-slate-50 p-5 sm:p-8">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
-          TripOS account
+          Komsan account
         </p>
         <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
           Create your account
@@ -140,6 +159,12 @@ export default function RegisterPage() {
             {submitting ? "Creating account…" : "Create account"}
           </button>
         </form>
+
+        <GoogleSignInButton
+          disabled={submitting}
+          onClick={() => void handleGoogleSignIn()}
+          submitting={submitting}
+        />
 
         <p className="mt-5 text-center text-sm text-slate-500">
           Already have an account?{" "}

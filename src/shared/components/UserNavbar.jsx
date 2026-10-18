@@ -1,41 +1,62 @@
 import { useEffect, useRef, useState } from "react";
 import Logo from "../../assets/Logo/logo.png";
+import DarkModeLogo from "../../assets/Logo/logodarkmode.png";
 import {
   Bookmark,
   Bell,
+  CalendarDays,
+  ChevronDown,
   Compass,
   Globe,
   Images,
   LogIn,
   LogOut,
+  Moon,
   Plane,
-  Sparkles,
+  Sun,
+  UserRound,
   Wallet,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import notificationApi from "../../services/api/notificationapi.js";
 import reminderApi from "../../services/api/reminderapi.js";
+import { resolveApiUrl } from "../../services/api/httpClient.js";
 
 const SEEN_DUE_REMINDERS_KEY = "tripos:seen-due-reminders";
+const DARK_MODE_KEY = "tripos:dark-mode";
 
 function getReminderKey(reminder) {
   return `${reminder.id}:${new Date(reminder.due_date).getTime()}`;
 }
 
-function UserNavbar({ onSignOut, isSignedIn }) {
+function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
   const [hasNotificationUpdate, setHasNotificationUpdate] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [failedAccountAvatarUrl, setFailedAccountAvatarUrl] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => localStorage.getItem(DARK_MODE_KEY) === "true",
+  );
   const seenDueReminderKeys = useRef(new Set());
   const acknowledgingNotifications = useRef(false);
+  const accountInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase();
+  const accountAvatarUrl = currentUser?.avatar_url
+    ? resolveApiUrl(currentUser.avatar_url)
+    : "";
   const menuItems = [
     { name: "Home", icon: Compass, path: "/" },
     { name: "Explore", icon: Globe, path: "/explore" },
     { name: "Saved Places", icon: Bookmark, path: "/saved" },
     { name: "My Trips", icon: Plane, path: "/trips" },
+    { name: "Itinerary", icon: CalendarDays, path: "/itinerary" },
     { name: "Budget & Wallet", icon: Wallet, path: "/budget" },
-    { name: "AI Assistant", icon: Sparkles, path: "/ai", badge: "PRO" },
     { name: "Notifications", icon: Bell, path: "/notifications" },
     { name: "Memories", icon: Images, path: "/memories" },
   ];
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem(DARK_MODE_KEY, String(isDarkMode));
+  }, [isDarkMode]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -168,11 +189,11 @@ function UserNavbar({ onSignOut, isSignedIn }) {
     <header className="z-50 flex h-20 w-full shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
       <Link
         aria-label="Komsan homepage"
-        className="flex shrink-0 items-center"
+        className="navbar-logo-link flex shrink-0 items-center"
         to="/"
       >
         <img
-          src={Logo}
+          src={isDarkMode ? DarkModeLogo : Logo}
           alt="Komsan"
           className="h-16 w-48 object-contain"
         />
@@ -254,41 +275,110 @@ function UserNavbar({ onSignOut, isSignedIn }) {
         })}
       </nav>
 
-      {isSignedIn ? (
+      <div className="flex shrink-0 items-center gap-1">
         <button
-          aria-label="Sign out"
-          className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
-          onClick={onSignOut}
+          aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          aria-pressed={isDarkMode}
+          className="grid h-10 w-10 place-items-center rounded-lg text-slate-600 transition-colors hover:bg-teal-50 hover:text-teal-800"
+          onClick={() => setIsDarkMode((current) => !current)}
+          title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           type="button"
         >
-          <LogOut aria-hidden="true" size={17} />
-          <span className="hidden sm:inline">Sign out</span>
+          {isDarkMode ? (
+            <Sun aria-hidden="true" size={18} />
+          ) : (
+            <Moon aria-hidden="true" size={18} />
+          )}
         </button>
-      ) : (
-        <div className="flex shrink-0 items-center gap-1">
-          <NavLink
-            aria-label="Sign in"
-            className={({ isActive }) =>
-              `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                isActive
-                  ? "bg-teal-700 text-white"
-                  : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"
-              }`
-            }
-            title="Sign in"
-            to="/login"
-          >
-            <LogIn aria-hidden="true" size={17} />
-            <span className="hidden sm:inline">Sign in</span>
-          </NavLink>
-          <Link
-            className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:scale-[1.03] hover:bg-teal-800"
-            to="/register"
-          >
-            Sign up
-          </Link>
-        </div>
-      )}
+        {isSignedIn ? (
+          <div className="relative">
+            <button
+              aria-expanded={isAccountMenuOpen}
+              aria-haspopup="menu"
+              aria-label="Account profile menu"
+              className="flex h-14 items-center gap-2.5 rounded-full border border-slate-200 bg-white p-1.5 pr-3 text-slate-600 transition-colors hover:border-teal-300 hover:bg-teal-50"
+              onClick={() => setIsAccountMenuOpen((open) => !open)}
+              type="button"
+            >
+              {accountAvatarUrl &&
+              failedAccountAvatarUrl !== accountAvatarUrl ? (
+                <img
+                  alt=""
+                  className="h-12 w-12 rounded-full object-cover"
+                  onError={() => setFailedAccountAvatarUrl(accountAvatarUrl)}
+                  referrerPolicy="no-referrer"
+                  src={accountAvatarUrl}
+                />
+              ) : (
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-teal-700 text-base font-bold text-white">
+                  {accountInitial || <UserRound aria-hidden="true" size={21} />}
+                </span>
+              )}
+              <ChevronDown aria-hidden="true" size={17} />
+            </button>
+            {isAccountMenuOpen && (
+              <div
+                className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                role="menu"
+              >
+                <div className="border-b border-slate-100 px-3 py-2">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {currentUser?.name || "Your account"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">
+                    {currentUser?.email || ""}
+                  </p>
+                </div>
+                <Link
+                  className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-teal-50 hover:text-teal-800"
+                  onClick={() => setIsAccountMenuOpen(false)}
+                  role="menuitem"
+                  to="/profile"
+                >
+                  <UserRound aria-hidden="true" size={16} />
+                  Profile
+                </Link>
+                <button
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-700 hover:bg-rose-50"
+                  onClick={() => {
+                    setIsAccountMenuOpen(false);
+                    onSignOut();
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <LogOut aria-hidden="true" size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <NavLink
+              aria-label="Sign in"
+              className={({ isActive }) =>
+                `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                  isActive
+                    ? "bg-teal-700 text-white"
+                    : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"
+                }`
+              }
+              title="Sign in"
+              to="/login"
+            >
+              <LogIn aria-hidden="true" size={17} />
+              <span className="hidden sm:inline">Sign in</span>
+            </NavLink>
+            <Link
+              className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:scale-[1.03] hover:bg-teal-800"
+              to="/register"
+            >
+              Sign up
+            </Link>
+          </>
+        )}
+      </div>
     </header>
   );
 }

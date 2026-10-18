@@ -549,22 +549,23 @@ function Budget() {
   return (
     <main className="min-h-full bg-[#f8fafc] p-5 text-slate-800 sm:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+        <header className="relative flex flex-wrap items-end justify-between gap-5 overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 p-6 text-white shadow-xl sm:p-10">
+          <div aria-hidden="true" className="absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="relative z-10">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">
               <span aria-hidden="true">● </span>Financial control hub
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
               Budget &amp; Wallet
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-teal-100/80">
               Track expenses, manage your trip wallet, and keep category spending
               aligned with your travel budget.
             </p>
           </div>
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="relative z-10 flex flex-wrap items-end gap-3">
             {trips.length > 0 && (
-              <label className="min-w-56 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="min-w-56 text-xs font-semibold uppercase tracking-wide text-teal-100">
                 Active trip
                 <select
                   className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-slate-800 shadow-sm"
@@ -580,7 +581,7 @@ function Budget() {
               </label>
             )}
             <button
-              className="inline-flex items-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-900"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-teal-900 shadow-sm transition hover:bg-teal-50"
               onClick={() => {
                 expenseFormRef.current?.scrollIntoView({
                   behavior: "smooth",

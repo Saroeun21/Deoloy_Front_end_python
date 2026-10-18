@@ -259,7 +259,7 @@ export function TripStoreProvider({ children }) {
         }),
       ]);
     } catch (loadError) {
-      console.error("Could not load TripOS lifecycle data:", loadError);
+      console.error("Could not load Komsan trip data:", loadError);
       setError(
         loadError instanceof Error
           ? loadError.message
@@ -382,7 +382,7 @@ export function TripStoreProvider({ children }) {
     setItinerary((current) => [...current, { ...item, day: dayNumber, date }]);
 
     let pendingExpense = null;
-    if (cost > 0) {
+    if (cost > 0 && String(trip.currency || "").toUpperCase() === "USD") {
       pendingExpense = {
         id: `pending-itinerary-${item.id}`,
         trip_id: trip.id,
@@ -452,6 +452,18 @@ export function TripStoreProvider({ children }) {
     wallets,
     itineraryDayRecords,
   ]);
+
+  const deleteItineraryItem = useCallback(async (itemId) => {
+    await itineraryItemApi.remove(itemId);
+    setItinerary((current) =>
+      current.filter((item) => String(item.id) !== String(itemId)),
+    );
+    setExpenses((current) =>
+      current.filter(
+        (expense) => String(expense.id) !== `pending-itinerary-${itemId}`,
+      ),
+    );
+  }, []);
 
   const updateBudget = useCallback(async (payload) => {
     const trip = getTripRecord(trips, payload.tripId ?? activeTripId);
@@ -688,6 +700,7 @@ export function TripStoreProvider({ children }) {
     reload: load,
     createTrip,
     addItineraryItem,
+    deleteItineraryItem,
     updateBudget,
     addExpense,
     addBooking,
@@ -701,6 +714,7 @@ export function TripStoreProvider({ children }) {
     addBooking,
     addExpense,
     addItineraryItem,
+    deleteItineraryItem,
     addReminder,
     endTrip,
     budget,

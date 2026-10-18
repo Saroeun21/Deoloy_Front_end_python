@@ -45,7 +45,7 @@ export async function parseDocument(file, tripId) {
     });
   } catch (error) {
     const detail = error instanceof Error ? ` ${error.message}` : "";
-    throw new Error(`Could not reach the TripOS document parser.${detail}`);
+    throw new Error(`Could not reach the Komsan document parser.${detail}`);
   }
 
   if (!response.ok) {

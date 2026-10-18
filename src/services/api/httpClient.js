@@ -1,5 +1,5 @@
 const BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/v1"
+  import.meta.env.VITE_API_BASE_URL || "/api/v1"
 ).replace(/\/+$/, "");
 const UNAUTHORIZED_EVENT = "tripos:unauthorized";
 
@@ -7,7 +7,8 @@ export function resolveApiUrl(path) {
   if (/^https?:\/\//i.test(path)) {
     return path;
   }
-  return new URL(path, `${new URL(BASE_URL).origin}/`).toString();
+  const apiOrigin = new URL(BASE_URL, window.location.origin).origin;
+  return new URL(path, `${apiOrigin}/`).toString();
 }
 
 function getAuthHeaders() {
@@ -55,19 +56,23 @@ export async function apiRequest(path, options = {}) {
   } catch (error) {
     const reason = error instanceof Error ? ` ${error.message}` : "";
     throw new Error(
-      `Cannot reach the TripOS API at ${BASE_URL}. Check that the backend is running.${reason}`,
+      `Cannot reach the Komsan API at ${BASE_URL}. Check that the backend is running.${reason}`,
     );
   }
 
   if (!response.ok) {
     const detail = formatErrorDetail(await response.text());
-    if (response.status === 401 && path !== "/auth/login") {
+    if (
+      response.status === 401 &&
+      path !== "/auth/login" &&
+      path !== "/auth/google"
+    ) {
       localStorage.removeItem("accessToken");
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }
     const serverHint =
       response.status >= 500
-        ? " The backend could not complete the request; check its terminal for database errors."
+        ? " The backend could not complete the request; check its configuration and logs."
         : "";
     throw new Error(
       `API request failed (HTTP ${response.status})${

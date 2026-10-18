@@ -3,7 +3,7 @@ import {
   WIKIDATA_API_URL,
   WIKIPEDIA_API_URL,
 } from './wikimediaApi.js';
-import { isEarthPlace } from './wikipediaPlaceMapper.js';
+import { isEarthPlace, isPlaceArticle } from './wikipediaPlaceMapper.js';
 
 const countrySearchCache = new Map();
 const COUNTRY_ALIASES = new Map([
@@ -22,6 +22,7 @@ const COUNTRY_ALIASES = new Map([
   ['south korea', 'South Korea'],
   ['north korea', 'North Korea'],
   ['russia', 'Russia'],
+  ['china', "People's Republic of China"],
 ]);
 const NON_DESTINATION_ENTITY_TYPES = new Set([
   'Q7278',
@@ -59,7 +60,6 @@ function isPoliticalArticle(page, entities) {
     .map((claim) => claim.mainsnak?.datavalue?.value?.id)
     .filter(Boolean);
   return (
-    instanceIds.some((id) => NON_DESTINATION_ENTITY_TYPES.has(id)) ||
     instanceIds.some((id) => NON_DESTINATION_ENTITY_TYPES.has(id)) ||
     NON_DESTINATION_ARTICLE.test(title) ||
     NON_DESTINATION_TITLE.test(title) ||
@@ -229,7 +229,7 @@ export async function searchPlacesInCountry(
   results.forEach(({ pages }, searchIndex) => {
     pages.forEach((page) => {
       if (
-        isEarthPlace(page) &&
+        isPlaceArticle(page) &&
         normalizeCountryName(page.title) !==
           normalizeCountryName(country.name) &&
         !candidates.has(page.pageid)

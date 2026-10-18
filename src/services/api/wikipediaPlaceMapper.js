@@ -43,6 +43,39 @@ export function isEarthPlace(page) {
   );
 }
 
+const NON_PLACE_TITLE =
+  /\b(?:flag|coat of arms|national anthem|politics|government|foreign relations|international relations|elections?|political parties?|parliaments?|legislatures?|supreme courts?|congress|senate|house of representatives|cabinet|military|armed forces|list of|administrative divisions|demographics|economy of)\b/i;
+const NON_PLACE_SUMMARY =
+  /\b(?:flag of|coat of arms of|national anthem of|politics of|government of|elections? in|foreign relations of|international relations of|demographics of|economy of|military of|is (?:a|an|the) politician|is (?:a|an|the) political party|is (?:a|an|the) government agency|is (?:a|an|the) legislative body)\b/i;
+const NON_PLACE_COORDINATE_TYPE =
+  /^(?:country|sovereign state|state|administrative region|administrative division|political unit)$/i;
+const NON_PLACE_IMAGE =
+  /(?:^|[_\-/ ])(?:flag|coat[_\-/ ]of[_\-/ ]arms|national[_\-/ ]emblem)(?:[_\-/ .]|$)/i;
+
+export function isPlaceArticle(page) {
+  if (!isEarthPlace(page) || !page.thumbnail?.source) return false;
+
+  const title = String(page.title || '').trim();
+  const summary = String(page.extract || '').trim();
+  let imageName = page.pageimage || page.thumbnail.source;
+  try {
+    imageName = decodeURIComponent(new URL(imageName, 'https://en.wikipedia.org').pathname);
+  } catch (error) {
+    if (!(error instanceof TypeError)) throw error;
+  }
+  const coordinates = page.coordinates.filter(
+    (coordinate) => !coordinate.globe || coordinate.globe === 'earth',
+  );
+  return (
+    !NON_PLACE_TITLE.test(title) &&
+    !NON_PLACE_SUMMARY.test(summary) &&
+    !NON_PLACE_IMAGE.test(imageName) &&
+    !coordinates.every((coordinate) =>
+      NON_PLACE_COORDINATE_TYPE.test(coordinate.type || ''),
+    )
+  );
+}
+
 export function mapWikipediaPage(page, countryName) {
   const coordinate = page.coordinates?.find(
     (point) => !point.globe || point.globe === 'earth',

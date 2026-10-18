@@ -331,7 +331,7 @@ function Trip() {
               destination.image ||
               destination.imageUrl ||
               current.imageUrl,
-            currency: destination.currency || current.currency,
+            currency: 'USD',
           }));
           setIsModalOpen(true);
         }
@@ -546,19 +546,20 @@ function Trip() {
   return (
     <div className="min-h-full bg-slate-50 p-4 text-slate-800 sm:p-7">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-5 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-7">
-          <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-teal-700">
-              <span className="mr-1 text-emerald-500">•</span> Active command center
+        <header className="relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 p-6 text-white shadow-xl sm:flex-row sm:items-center sm:justify-between sm:p-10">
+          <div aria-hidden="true" className="absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="relative z-10">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-teal-200">
+              <span className="mr-1 text-emerald-300">•</span> Active command center
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
               My Trips
             </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-teal-100/80">
               Manage, track, and organize your upcoming, active, and past adventures.
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative z-10 flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
               onClick={() => navigate('/ai')}
@@ -1088,7 +1089,7 @@ function Trip() {
                     setFormData((current) => ({
                       ...current,
                       destinationId: event.target.value,
-                      currency: selected?.currency || current.currency,
+                      currency: 'USD',
                       name: current.name || selected?.name || '',
                     }));
                   }}
@@ -1284,7 +1285,7 @@ function Trip() {
                   maxLength={10}
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  placeholder="USD"
+                  placeholder="Choose a destination or enter a currency code"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm uppercase outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
                 />
               </div>

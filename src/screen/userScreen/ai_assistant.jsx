@@ -166,7 +166,7 @@ function AIAssistant() {
             Sign in to chat
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Your conversations are private to your TripOS account.
+            Your conversations are private to your Komsan account.
           </p>
           <a
             className="mt-5 inline-flex rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white"
@@ -197,7 +197,7 @@ function AIAssistant() {
               <Sparkles size={20} />
             </span>
             <div>
-              <h1 className="font-bold text-slate-900">TripOS Assistant</h1>
+              <h1 className="font-bold text-slate-900">Komsan Assistant</h1>
               <p className="text-xs text-slate-500">Travel planning chat</p>
             </div>
           </div>

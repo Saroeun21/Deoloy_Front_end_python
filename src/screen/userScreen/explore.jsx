@@ -241,7 +241,7 @@ function Explore({
         <header className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 p-8 text-white shadow-xl sm:p-12">
           <div className="relative z-10 max-w-2xl space-y-3">
             <span className="inline-block rounded-full bg-teal-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-teal-300 backdrop-blur-md">
-              TripOS Discovery
+              Komsan Discovery
             </span>
             <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
               Explore Destinations & Places

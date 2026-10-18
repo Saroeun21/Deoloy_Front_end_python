@@ -79,7 +79,7 @@ function DocumentUploader({ tripId, onComplete }) {
         <div className="min-w-0 flex-1">
           <h2 className="font-bold text-slate-950">Import a travel document</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Upload a booking, ticket, or receipt. TripOS will add parsed items
+            Upload a booking, ticket, or receipt. Komsan will add parsed items
             to the selected trip.
           </p>
           <form

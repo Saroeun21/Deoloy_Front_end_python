@@ -1,15 +1,36 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../app/providers/authContext.js";
 import { useState } from "react";
+import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleGoogleSignIn() {
+    setSubmitting(true);
+    setError("");
+    try {
+      await signInWithGoogle();
+      const returnTo = location.state?.from;
+      navigate(returnTo || "/", { replace: true });
+    } catch (googleError) {
+      console.error("Could not sign in with Google:", googleError);
+      setError(
+        googleError instanceof Error
+          ? googleError.message
+          : "Could not sign in with Google. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitting(true);
@@ -35,10 +56,10 @@ export default function LoginPage() {
     <section className="flex min-h-full items-center justify-center bg-slate-50 p-5 sm:p-8">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
-          TripOS account
+          Komsan account
         </p>
         <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
-          Sign in to TripOS
+          Sign in to Komsan
         </h1>
         <p className="mt-2 text-sm text-slate-500">
           Save places, build trips, and manage your travel workspace. You can
@@ -88,8 +109,14 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <GoogleSignInButton
+          disabled={submitting}
+          onClick={() => void handleGoogleSignIn()}
+          submitting={submitting}
+        />
+
         <p className="mt-5 text-center text-sm text-slate-500">
-          New to TripOS?{" "}
+          New to Komsan?{" "}
           <Link
             className="font-semibold text-teal-700 hover:text-teal-900"
             state={location.state}

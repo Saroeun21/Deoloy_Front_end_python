@@ -1,6 +1,6 @@
-# TripOS Project Structure
+# Komsan Project Structure
 
-This blueprint organizes the TripOS frontend by product feature. The current workspace is a Vite + React frontend, so backend APIs and third-party integrations are represented as service boundaries rather than implemented server folders.
+This blueprint organizes the Komsan frontend by product feature. The current workspace is a Vite + React frontend, so backend APIs and third-party integrations are represented as service boundaries rather than implemented server folders.
 
 ## Target folder tree
 
@@ -128,7 +128,7 @@ tests/
 | `/assistant` | AI Travel Assistant | `assistant` |
 | `/trips/:tripId/memories` | Trip memories & journal | `memories` |
 | `/trips/:tripId/analytics` | Trip summary & analytics | `analytics` |
-| `/profile` | User profile & settings | `profile` |
+| `/profile` | User profile | `profile` |
 | `/admin` | Admin mission control | `admin` (admin role required) |
 
 ## Ownership rules

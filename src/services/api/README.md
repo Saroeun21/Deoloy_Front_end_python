@@ -22,3 +22,9 @@ The saved-place API uses the authenticated `/saved-places` endpoint. The Saved
 Places screen joins saved-place records with `/places`; hearts are shown only
 for persisted places because destinations and Wikipedia search results are
 not accepted by the saved-place API.
+
+The account profile uses the authenticated `/users/me` endpoint to read the
+signed-in user's name, email, and profile text. Profile edits are sent as a
+`PATCH` to `/users/me`; email remains read-only in the current profile UI.
+Profile photos are uploaded as multipart data to `/users/me/avatar` and served
+from a generated avatar URL.

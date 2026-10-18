@@ -23,12 +23,12 @@ const HERO_FALLBACK_SLIDES = [
     img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=85',
   },
   {
-    title: 'Bangkok, Thailand',
+    title: 'Bangkok',
     desc: 'Explore vibrant city streets, local markets, and golden temples.',
     img: 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85',
   },
   {
-    title: 'Phuket, Thailand',
+    title: 'Phuket',
     desc: 'Plan a getaway to bright blue water and peaceful beaches.',
     img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=85',
   },
@@ -520,7 +520,7 @@ export default function Home({
       <section className="mx-6 flex flex-col items-center justify-between gap-6 rounded-2xl bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 p-6 text-white shadow-lg md:mx-8 md:flex-row">
         <div className="space-y-2 max-w-xl">
           <span className="bg-teal-500/30 text-teal-200 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border border-teal-400/30">
-            TripOS Screenshot AI 2.0
+            Komsan Screenshot AI 2.0
           </span>
           <h3 className="text-xl font-extrabold">Stop manually typing flight bookings and reservations.</h3>
           <p className="text-xs text-slate-300">

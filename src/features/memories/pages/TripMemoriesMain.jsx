@@ -160,7 +160,7 @@ function mapBackendMemories(records, photos) {
       trip_id: record.trip_id,
       day,
       date: formatDayDate(record.memory_date, day),
-      place: String(record.location || 'THAILAND').split(',')[0].toUpperCase(),
+      place: String(record.location || 'TRIP JOURNAL').split(',')[0].toUpperCase(),
       title: record.title || 'A day to remember',
       location: record.location || 'Indonesia',
       note: record.description || 'A little moment, saved for the days when we want to remember.',
@@ -278,17 +278,24 @@ function JournalPhotoImage({ photo, className }) {
   );
 }
 
-function PhotoGrid({ photos, day }) {
+function PhotoGrid({ photos, day, onPhotoClick }) {
   const photoSet = photos.length >= 3 ? photos.slice(0, 3) : [...photos, ...sampleJournal[(day - 1) % sampleJournal.length].photos].slice(0, 3);
 
   return (
     <div className="grid h-70 grid-cols-[1.4fr_1fr] gap-2 overflow-hidden rounded-xl bg-slate-100 sm:h-80">
       <figure className="group relative min-h-0 overflow-hidden rounded-xl">
-        <JournalPhotoImage
-          photo={photoSet[0]}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"
-        />
-        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/65 to-transparent px-4 pb-3 pt-12">
+        <button
+          aria-label={`View photo: ${photoSet[0].caption}`}
+          className="absolute inset-0 h-full w-full cursor-zoom-in text-left"
+          onClick={() => onPhotoClick(photoSet[0])}
+          type="button"
+        >
+          <JournalPhotoImage
+            photo={photoSet[0]}
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"
+          />
+        </button>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/65 to-transparent px-4 pb-3 pt-12">
           <figcaption className="text-[11px] font-semibold tracking-wide text-white">{photoSet[0].caption}</figcaption>
         </div>
         <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-slate-700 backdrop-blur-sm">
@@ -298,11 +305,18 @@ function PhotoGrid({ photos, day }) {
       <div className="grid min-h-0 grid-rows-2 gap-2">
         {photoSet.slice(1, 3).map((photo, index) => (
           <figure key={`${photo.src}-${index}`} className="group relative min-h-0 overflow-hidden rounded-xl">
-            <JournalPhotoImage
-              photo={photo}
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/65 to-transparent px-3 pb-2.5 pt-8">
+            <button
+              aria-label={`View photo: ${photo.caption}`}
+              className="absolute inset-0 h-full w-full cursor-zoom-in text-left"
+              onClick={() => onPhotoClick(photo)}
+              type="button"
+            >
+              <JournalPhotoImage
+                photo={photo}
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+              />
+            </button>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/65 to-transparent px-3 pb-2.5 pt-8">
               <figcaption className="text-[10px] font-semibold tracking-wide text-white">{photo.caption}</figcaption>
             </div>
           </figure>
@@ -330,7 +344,14 @@ function ReactionSummary({ count }) {
   );
 }
 
-function JournalCard({ memory, viewMode, playing, onToggleAudio, onDelete }) {
+function JournalCard({
+  memory,
+  viewMode,
+  playing,
+  onToggleAudio,
+  onDelete,
+  onPhotoClick,
+}) {
   const canDelete = typeof memory?.id !== 'undefined' && memory.id !== null && typeof onDelete === 'function';
 
   return (
@@ -383,13 +404,24 @@ function JournalCard({ memory, viewMode, playing, onToggleAudio, onDelete }) {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {memory.photos.map((photo, index) => (
                 <figure key={`${photo.src}-${index}`} className="group relative aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
-                  <JournalPhotoImage photo={photo} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                  <figcaption className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/60 to-transparent px-3 pb-2 pt-7 text-[9px] font-semibold text-white">{photo.caption}</figcaption>
+                  <button
+                    aria-label={`View photo: ${photo.caption}`}
+                    className="absolute inset-0 h-full w-full cursor-zoom-in text-left"
+                    onClick={() => onPhotoClick(photo)}
+                    type="button"
+                  >
+                    <JournalPhotoImage photo={photo} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  </button>
+                  <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/60 to-transparent px-3 pb-2 pt-7 text-[9px] font-semibold text-white">{photo.caption}</figcaption>
                 </figure>
               ))}
             </div>
           ) : (
-            <PhotoGrid photos={memory.photos} day={memory.day} />
+            <PhotoGrid
+              photos={memory.photos}
+              day={memory.day}
+              onPhotoClick={onPhotoClick}
+            />
           )}
 
           <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 sm:px-5">
@@ -439,7 +471,7 @@ function SidebarWidgets({ onShare }) {
       <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h2 className="text-[12px] font-bold text-slate-900">TripOS Smart Reel</h2>
+            <h2 className="text-[12px] font-bold text-slate-900">Komsan Smart Reel</h2>
             <p className="mt-1 text-[9px] text-slate-500">Seven days, in one little film</p>
           </div>
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-50 text-teal-700"><Sparkles size={15} /></span>
@@ -739,6 +771,7 @@ export default function TripMemoriesMain() {
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState('timeline');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState('');
@@ -803,6 +836,15 @@ export default function TripMemoriesMain() {
   }, [memories, photos, indonesiaTrip]);
   const usingSampleData = tripMemories.length === 0;
   const journal = usingSampleData ? sampleJournal : tripMemories;
+
+  useEffect(() => {
+    if (!selectedPhoto) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setSelectedPhoto(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPhoto]);
 
   const filteredJournal = useMemo(() => {
     if (activeTab === 'all') return journal;
@@ -923,31 +965,32 @@ export default function TripMemoriesMain() {
   return (
     <main className="min-h-full bg-slate-50 p-5 pb-16 text-slate-800 sm:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+        <header className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 p-6 text-white shadow-xl sm:flex-row sm:items-end sm:justify-between sm:p-10">
+          <div aria-hidden="true" className="absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="relative z-10 min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">
               After the journey
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
               Trip memories
             </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-500">
+            <p className="mt-2 max-w-3xl text-sm text-teal-100/80">
               Keep the moments, photos, and stories from your trips together.
             </p>
           </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:items-start">
+          <div className="relative z-10 flex shrink-0 flex-col gap-2 sm:items-start">
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => { setActionError(''); setIsDialogOpen(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-800">
+              <button type="button" onClick={() => { setActionError(''); setIsDialogOpen(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-teal-900 transition hover:bg-teal-50">
                 <Plus size={15} /> Add Memory / Photo Drop
               </button>
-              <button type="button" onClick={() => window.print()} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+              <button type="button" onClick={() => window.print()} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
                 <ArrowDownToLine size={14} /> Export PDF
               </button>
-              <button type="button" onClick={handleShare} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+              <button type="button" onClick={handleShare} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
                 <Share2 size={14} /> Share Link
               </button>
             </div>
-          <a href="/trips" className="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:text-teal-800">
+          <a href="/trips" className="inline-flex items-center gap-1 text-sm font-semibold text-teal-100 hover:text-white">
             View full trip summary <ArrowRight size={14} />
           </a>
           </div>
@@ -1019,6 +1062,7 @@ export default function TripMemoriesMain() {
                 playing={isPlaying && Boolean(memory.audio)}
                 onDelete={accessToken ? handleDeleteMemory : undefined}
                 onToggleAudio={() => setIsPlaying((playing) => !playing)}
+                onPhotoClick={setSelectedPhoto}
               />
             ))}
             {(!loading || !accessToken) && !filteredJournal.length && (
@@ -1044,6 +1088,37 @@ export default function TripMemoriesMain() {
           onClose={() => setIsDialogOpen(false)}
           onSubmit={handleSaveMemory}
         />
+      )}
+      {selectedPhoto && (
+        <div
+          aria-label="Photo preview"
+          aria-modal="true"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm sm:p-8"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setSelectedPhoto(null);
+          }}
+          role="dialog"
+        >
+          <button
+            aria-label="Close photo preview"
+            className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            onClick={() => setSelectedPhoto(null)}
+            type="button"
+          >
+            <X size={22} />
+          </button>
+          <figure className="flex max-h-full max-w-full flex-col items-center gap-3">
+            <JournalPhotoImage
+              photo={selectedPhoto}
+              className="max-h-[78vh] max-w-full rounded-xl object-contain shadow-2xl"
+            />
+            {selectedPhoto.caption && (
+              <figcaption className="max-w-2xl text-center text-sm font-medium text-white">
+                {selectedPhoto.caption}
+              </figcaption>
+            )}
+          </figure>
+        </div>
       )}
     </main>
   );

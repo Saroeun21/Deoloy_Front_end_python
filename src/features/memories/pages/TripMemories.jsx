@@ -34,7 +34,7 @@ const memories = [
     place: 'BANGKOK',
     title: 'Arrival in the City of Angels & Night River Cruise',
     time: '4:30 PM — 10:15 PM',
-    location: 'Bangkok, Thailand',
+    location: 'Bangkok',
     note: 'The city welcomed us with warm air, the scent of jasmine, and a thousand little moments. We watched the skyline shimmer from the river as the sun disappeared behind the temples.',
     tags: ['#Bangkok', '#StreetFood', '#NightCruise'],
     photos: [
@@ -45,7 +45,7 @@ const memories = [
       },
       {
         src: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=700&q=85',
-        alt: 'Ornate Thai temple roof',
+        alt: 'Ornate temple roof',
       },
       {
         src: 'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=700&q=85',
@@ -65,12 +65,12 @@ const memories = [
     photos: [
       {
         src: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=1200&q=85',
-        alt: 'The decorated facade of a Thai temple',
+        alt: 'The decorated facade of a temple',
         featured: true,
       },
       {
         src: 'https://images.unsplash.com/photo-1564910443496-5fd2d76b47fa?auto=format&fit=crop&w=700&q=85',
-        alt: 'Golden details inside a Thai temple',
+        alt: 'Golden details inside a temple',
       },
       {
         src: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=700&q=85',
@@ -85,7 +85,7 @@ const memories = [
     place: 'CHIANG MAI',
     title: 'Chiang Mai Old City & Ethical Elephant Sanctuary',
     time: '7:15 AM — 5:20 PM',
-    location: 'Chiang Mai, Thailand',
+    location: 'Chiang Mai',
     note: 'We traded temple bells for birdsong and spent the morning learning how the sanctuary cares for its gentle residents. No rushing, no riding — just muddy paths and unforgettable company.',
     tags: ['#ChiangMai', '#ElephantSanctuary', '#SlowTravel'],
     photos: [
@@ -96,7 +96,7 @@ const memories = [
       },
       {
         src: 'https://images.unsplash.com/photo-1513415277900-a62401e19be4?auto=format&fit=crop&w=900&q=85',
-        alt: 'A quiet, leafy path in northern Thailand',
+        alt: 'A quiet, leafy northern path',
       },
     ],
     audio: 'Morning walk with elephants — Chiang Mai',
@@ -121,7 +121,7 @@ function TopBar({ searchQuery, onSearchChange }) {
         <div className="hidden min-w-0 items-center gap-2 text-xs sm:flex">
           <a href="/trips" className="font-medium text-slate-400 hover:text-emerald-700">My Trips</a>
           <ChevronRight size={14} className="text-slate-300" />
-          <span className="max-w-48 truncate font-semibold text-slate-700">Thailand Adventure 2026</span>
+          <span className="max-w-48 truncate font-semibold text-slate-700">Trip Adventure 2026</span>
         </div>
         <label className="ml-auto flex h-10 min-w-0 max-w-72.5 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-50">
           <Search size={16} className="shrink-0 text-slate-400" />
@@ -307,14 +307,14 @@ function SmartReel() {
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <h2 className="text-[13px] font-bold text-slate-900">TripOS Smart Reel</h2>
+          <h2 className="text-[13px] font-bold text-slate-900">Komsan Smart Reel</h2>
           <p className="mt-0.5 text-[10px] text-slate-400">Your trip in 60 seconds</p>
         </div>
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-50 text-violet-600"><Sparkles size={15} /></span>
       </div>
       <button
         type="button"
-        aria-label="Play Thailand trip highlight reel"
+        aria-label="Play trip highlight reel"
         className="group relative block h-38.75 w-full overflow-hidden rounded-xl bg-slate-800 text-left"
       >
         <img
@@ -329,7 +329,7 @@ function SmartReel() {
         </span>
         <span className="absolute bottom-3 left-3 right-3 flex items-end justify-between text-white">
           <span>
-            <span className="block text-xs font-bold">Thailand, through our eyes</span>
+            <span className="block text-xs font-bold">Our trip, through our eyes</span>
             <span className="mt-1 block text-[9px] text-white/75">7 days · 142 moments</span>
           </span>
           <span className="rounded-md bg-black/40 px-1.5 py-1 text-[9px] font-bold">1:02</span>
@@ -341,7 +341,7 @@ function SmartReel() {
 
 function Superlatives() {
   const entries = [
-    { title: 'Best Meal', detail: 'Pad Thai at Thipsamai', icon: '✦', color: 'bg-amber-50 text-amber-700', rank: '01' },
+    { title: 'Best Meal', detail: 'Local noodles at Thipsamai', icon: '✦', color: 'bg-amber-50 text-amber-700', rank: '01' },
     { title: 'Favorite Landmark', detail: 'Wat Arun at golden hour', icon: '⌖', color: 'bg-sky-50 text-sky-700', rank: '02' },
     { title: 'Funniest Moment', detail: 'The tuk-tuk karaoke ride', icon: '☺', color: 'bg-rose-50 text-rose-700', rank: '03' },
   ];
@@ -429,7 +429,7 @@ function RouteFootprint() {
           <text x="124" y="27" fill="#475569" fontSize="9" fontWeight="600">Chiang Mai</text>
           <text x="185" y="85" fill="#475569" fontSize="9" fontWeight="600">Phuket</text>
         </svg>
-        <span className="absolute right-2 top-2 rounded-md bg-white/90 px-2 py-1 text-[8px] font-bold text-slate-500 shadow-sm">THAILAND</span>
+        <span className="absolute right-2 top-2 rounded-md bg-white/90 px-2 py-1 text-[8px] font-bold text-slate-500 shadow-sm">TRIP JOURNAL</span>
       </div>
       <div className="mt-3 flex items-center justify-between">
         <span className="text-[10px] font-medium text-slate-500">Total distance</span>
@@ -498,7 +498,7 @@ export default function TripMemories() {
                 <span className="text-[10px] font-semibold text-slate-400">APR 06 — APR 12, 2026</span>
               </div>
               <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.04em] text-slate-900 sm:text-[32px]">
-                Thailand Adventure Memories
+                Trip Adventure Memories
               </h1>
               <p className="mt-1.5 max-w-2xl text-[12px] leading-5 text-slate-500">
                 Seven unforgettable days, three good friends, and a thousand little reasons to come back.

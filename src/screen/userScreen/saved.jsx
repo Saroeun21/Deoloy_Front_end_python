@@ -137,16 +137,19 @@ function Saved({
   return (
     <main className="min-h-full bg-slate-50 p-5 text-slate-800 sm:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
-            Your shortlist
-          </p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight">
-            Saved items
-          </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Keep destinations and places you love handy while you plan.
-          </p>
+        <header className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 p-8 text-white shadow-xl sm:p-10">
+          <div className="relative z-10 max-w-2xl space-y-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">
+              Your shortlist
+            </p>
+            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
+              Saved items
+            </h1>
+            <p className="text-sm text-teal-100/80">
+              Keep destinations and places you love handy while you plan.
+            </p>
+          </div>
+          <div aria-hidden="true" className="absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-teal-500/10 blur-3xl" />
         </header>
 
         {error && (

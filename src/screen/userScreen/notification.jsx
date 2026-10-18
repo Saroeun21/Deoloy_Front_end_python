@@ -20,6 +20,7 @@ import {
 import notificationApi from "../../services/api/notificationapi.js";
 import reminderApi from "../../services/api/reminderapi.js";
 import tripApi from "../../services/api/tripapi.js";
+import userApi from "../../services/api/userApi.js";
 import { useAuth } from "../../app/providers/authContext.js";
 
 function formatDate(value) {
@@ -88,6 +89,10 @@ function NotificationAvatar({ item, isReminder, presentation }) {
 
 function Notification() {
   const { accessToken } = useAuth();
+  const [accountProfile, setAccountProfile] = useState({
+    accessToken: "",
+    email: "",
+  });
   const [notifications, setNotifications] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [trips, setTrips] = useState([]);
@@ -105,6 +110,8 @@ function Notification() {
     type: "custom",
   });
   const [error, setError] = useState("");
+  const accountEmail =
+    accountProfile.accessToken === accessToken ? accountProfile.email : "";
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -148,6 +155,22 @@ function Notification() {
   useEffect(() => {
     if (accessToken) void loadNotifications();
   }, [accessToken, loadNotifications]);
+
+  useEffect(() => {
+    if (!accessToken) return undefined;
+    let active = true;
+    userApi
+      .getCurrentUser()
+      .then((user) => {
+        if (active) setAccountProfile({ accessToken, email: user.email });
+      })
+      .catch((profileError) => {
+        console.error("Could not load the signed-in email:", profileError);
+      });
+    return () => {
+      active = false;
+    };
+  }, [accessToken]);
 
   const unreadCount = notifications.filter(
     (notification) => !notification.is_read,
@@ -409,22 +432,22 @@ function Notification() {
   return (
     <main className="min-h-full bg-slate-50 p-5 text-slate-800 sm:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-xl">
-            <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+        <header className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 p-6 text-white shadow-xl sm:flex-row sm:items-end sm:justify-between sm:p-10">
+          <div aria-hidden="true" className="absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="relative z-10 max-w-xl">
+            <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.18em] text-teal-200">
               <BellRing size={12} /> Your travel circle
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-white">
               Notifications
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-teal-100/80">
               The little updates that keep your people and your plans in sync.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="relative z-10 flex flex-wrap items-center gap-2">
             <button
-              className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={trips.length === 0}
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-teal-900 transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setShowReminderForm((current) => !current)}
               type="button"
             >
@@ -432,7 +455,7 @@ function Notification() {
               <span>Add reminder</span>
             </button>
             <button
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={unreadCount === 0 || markingAll || filter === "reminders"}
               onClick={() => void markAllAsRead()}
               type="button"
@@ -460,6 +483,11 @@ function Notification() {
             <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-500">Reminders</p>
           </div>
         </div>
+        <p className="rounded-xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-600">
+          Reminder emails are sent to the Komsan account that created each
+          reminder{accountEmail ? ` (${accountEmail})` : ""}. Switching accounts
+          does not change where existing reminders are sent.
+        </p>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <nav aria-label="Filter notifications" className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
@@ -520,12 +548,18 @@ function Notification() {
                 Create a reminder
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                It will appear in your reminder list when saved.
+                It will appear in your reminder list when saved. We’ll email
+                {accountEmail ? ` ${accountEmail}` : " the address on your Komsan account"}
+                {" "}when it’s due, usually within a minute.
               </p>
             </div>
             {trips.length === 0 ? (
               <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Create a trip before adding a reminder.
+                A reminder must be linked to one of your trips.{" "}
+                <a className="font-semibold underline" href="/trips/create">
+                  Create a trip
+                </a>{" "}
+                first, then come back to add this reminder.
               </p>
             ) : (
               <>
@@ -725,6 +759,14 @@ function Notification() {
                       {isReminder && (
                         <span className={`rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide ${item.status === "completed" ? "bg-slate-100 text-slate-500" : "bg-teal-100 text-teal-800"}`}>
                           {item.status}
+                        </span>
+                      )}
+                      {item.email_sent_at && (
+                        <span
+                          className="rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-emerald-800"
+                          title={`Gmail accepted this email at ${formatDate(item.email_sent_at)}. Check your inbox or spam folder if it is missing.`}
+                        >
+                          Gmail accepted
                         </span>
                       )}
                       <span className="rounded-full bg-white/80 px-2 py-0.5 text-[8px] font-semibold text-slate-500">
