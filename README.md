@@ -33,6 +33,31 @@ or configure the web server to proxy `/api` to the backend. If the variable is
 not set, production builds use this deployment's Render API URL by default;
 local development continues to use Vite's `/api` proxy.
 
+### Vercel and Google sign-in
+
+Add these variables in the Vercel project's **Settings > Environment Variables**
+for the Production environment, using the Web app configuration from your
+Firebase project:
+
+```text
+VITE_API_BASE_URL=https://deploy-back-end-python.onrender.com/api/v1
+VITE_FIREBASE_API_KEY=<Firebase Web API key>
+VITE_FIREBASE_AUTH_DOMAIN=<Firebase project auth domain>
+VITE_FIREBASE_PROJECT_ID=<Firebase project ID>
+VITE_FIREBASE_APP_ID=<Firebase Web app ID>
+```
+
+After adding or changing the variables, redeploy the Vercel project because
+Vite embeds `VITE_` values into the build. In Firebase Console, enable the
+Google provider under **Authentication > Sign-in method** and add
+`deoloy-front-end-python.vercel.app` to **Authentication > Settings >
+Authorized domains**. The backend Render service must use the same
+`FIREBASE_PROJECT_ID`.
+
+Vercel serves this application as a single-page app. The root `vercel.json`
+rewrite sends client-side paths such as `/login` and `/register` to the app so
+refreshing or directly opening those routes does not return Vercel's 404 page.
+
 The backend must have valid PostgreSQL credentials in its `.env` file and its
 migrations must be applied. From the backend project directory:
 
