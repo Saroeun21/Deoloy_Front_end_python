@@ -28,8 +28,10 @@ origin mismatches. To use a different API server, set
 `vite.config.js`, then restart Vite.
 
 For a production build, set `VITE_API_BASE_URL` to the backend's reachable API
-URL (for example, `https://api.example.com/api/v1`) or configure the web server
-to proxy `/api` to the backend.
+URL (for this deployment, `https://deploy-back-end-python.onrender.com/api/v1`)
+or configure the web server to proxy `/api` to the backend. If the variable is
+not set, production builds use this deployment's Render API URL by default;
+local development continues to use Vite's `/api` proxy.
 
 The backend must have valid PostgreSQL credentials in its `.env` file and its
 migrations must be applied. From the backend project directory:
