@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../app/providers/authContext.js";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
@@ -20,12 +20,22 @@ export default function RegisterPage() {
   const [profile, setProfile] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const errorMessageRef = useRef(null);
 
   useEffect(() => {
     if (googleRedirectComplete) {
       navigate("/", { replace: true });
     }
   }, [googleRedirectComplete, navigate]);
+
+  useEffect(() => {
+    if (error || googleRedirectError) {
+      errorMessageRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [error, googleRedirectError]);
 
   async function handleGoogleSignIn() {
     setError("");
@@ -66,10 +76,14 @@ export default function RegisterPage() {
       navigate(location.state?.from || "/", { replace: true });
     } catch (registerError) {
       console.error("Could not register account:", registerError);
-      setError(
+      const message =
         registerError instanceof Error
           ? registerError.message
-          : "Could not create your account. Please try again.",
+          : "Could not create your account. Please try again.";
+      setError(
+        message.includes("HTTP 409")
+          ? "This email already has an account. Sign in with that account instead."
+          : message,
       );
     } finally {
       setSubmitting(false);
@@ -101,15 +115,6 @@ export default function RegisterPage() {
         </>
       }
     >
-      {(error || googleRedirectError) && (
-        <p
-          className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          role="alert"
-        >
-          {error || googleRedirectError}
-        </p>
-      )}
-
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <label className="block text-sm font-medium text-slate-700">
           Name
@@ -184,6 +189,16 @@ export default function RegisterPage() {
           {submitting ? "Creating account…" : "Create account"}
         </button>
       </form>
+
+      {(error || googleRedirectError) && (
+        <p
+          ref={errorMessageRef}
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          role="alert"
+        >
+          {error || googleRedirectError}
+        </p>
+      )}
 
       <GoogleSignInButton
         disabled={submitting}

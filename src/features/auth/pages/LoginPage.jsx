@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../app/providers/authContext.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import AuthPageLayout from "../components/AuthPageLayout.jsx";
 
@@ -17,12 +17,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const errorMessageRef = useRef(null);
 
   useEffect(() => {
     if (googleRedirectComplete) {
       navigate("/", { replace: true });
     }
   }, [googleRedirectComplete, navigate]);
+
+  useEffect(() => {
+    if (error || googleRedirectError) {
+      errorMessageRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [error, googleRedirectError]);
 
   async function handleGoogleSignIn() {
     setSubmitting(true);
@@ -91,15 +101,6 @@ export default function LoginPage() {
         </>
       }
     >
-      {(error || googleRedirectError) && (
-        <p
-          className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          role="alert"
-        >
-          {error || googleRedirectError}
-        </p>
-      )}
-
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <label className="block text-sm font-medium text-slate-700">
           Email
@@ -133,6 +134,16 @@ export default function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
+
+      {(error || googleRedirectError) && (
+        <p
+          ref={errorMessageRef}
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          role="alert"
+        >
+          {error || googleRedirectError}
+        </p>
+      )}
 
       <GoogleSignInButton
         disabled={submitting}
