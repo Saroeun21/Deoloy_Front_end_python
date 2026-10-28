@@ -1,6 +1,13 @@
 {
   "rewrites": [
     {
+<<<<<<< HEAD
+=======
+      "source": "/api/:path*",
+      "destination": "https://deploy-back-end-python.onrender.com/api/:path*"
+    },
+    {
+>>>>>>> b7f188a (First Commit)
       "source": "/(.*)",
       "destination": "/index.html"
     }

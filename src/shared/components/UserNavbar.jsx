@@ -186,22 +186,22 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
   }
 
   return (
-    <header className="z-50 flex h-20 w-full shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
+    <header className="z-50 flex h-20 w-full shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4 shadow-sm max-sm:h-auto max-sm:min-h-16 max-sm:flex-wrap max-sm:gap-1 max-sm:px-3 max-sm:py-2 sm:px-6 lg:px-8">
       <Link
         aria-label="Komsan homepage"
-        className="navbar-logo-link flex shrink-0 items-center"
+        className="navbar-logo-link flex shrink-0 items-center max-sm:w-32"
         to="/"
       >
         <img
           src={isDarkMode ? DarkModeLogo : Logo}
           alt="Komsan"
-          className="h-16 w-48 object-contain"
+          className="h-12 w-36 object-contain xl:h-16 xl:w-48"
         />
       </Link>
 
       <nav
         aria-label="Main navigation"
-        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
+        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto max-sm:order-last max-sm:basis-full max-sm:flex-none max-sm:border-t max-sm:border-slate-100 max-sm:pt-1"
       >
         {menuItems.map((item) => {
           const IconComponent = item.icon;
@@ -228,7 +228,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
                 }
               }}
               className={({ isActive }) =>
-                `flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                `flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors max-sm:px-2 ${
                   isActive
                     ? isIndigo
                       ? "bg-indigo-600 text-white"
@@ -256,7 +256,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
                         />
                       )}
                   </span>
-                  <span>{item.name}</span>
+                  <span className="hidden xl:inline">{item.name}</span>
                   {item.badge && (
                     <span
                       className={`rounded px-1 py-0.5 text-[9px] font-bold leading-none ${
@@ -275,7 +275,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
         })}
       </nav>
 
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1">
         <button
           aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           aria-pressed={isDarkMode}

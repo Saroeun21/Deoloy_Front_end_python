@@ -27,6 +27,7 @@ origin mismatches. To use a different API server, set
 `VITE_API_PROXY_TARGET` in the environment or configure the proxy in
 `vite.config.js`, then restart Vite.
 
+<<<<<<< HEAD
 For a production build, set `VITE_API_BASE_URL` to the backend's reachable API
 URL (for this deployment, `https://deploy-back-end-python.onrender.com/api/v1`)
 or configure the web server to proxy `/api` to the backend. If the variable is
@@ -57,6 +58,17 @@ Authorized domains**. The backend Render service must use the same
 Vercel serves this application as a single-page app. The root `vercel.json`
 rewrite sends client-side paths such as `/login` and `/register` to the app so
 refreshing or directly opening those routes does not return Vercel's 404 page.
+=======
+Production builds use
+`https://deploy-back-end-python.onrender.com/api/v1` unless `VITE_API_BASE_URL`
+is set to an absolute backend URL. Development uses the local Vite proxy by
+default. If you change the backend host, update the Vercel environment variable
+and ensure the backend allows requests from the deployed frontend origin.
+
+Vercel deployments use `vercel.json` to forward `/api/*` requests to the
+deployed backend and serve the React app for client-side routes such as `/login`.
+Deploy the frontend again after changing these rewrites.
+>>>>>>> b7f188a (First Commit)
 
 The backend must have valid PostgreSQL credentials in its `.env` file and its
 migrations must be applied. From the backend project directory:
