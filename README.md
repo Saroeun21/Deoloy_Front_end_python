@@ -57,9 +57,10 @@ Vercel serves this application as a single-page app. The root `vercel.json`
 rewrite sends client-side paths such as `/login` and `/register` to the app so
 refreshing or directly opening those routes does not return Vercel's 404 page.
 
-Google sign-in uses a popup when available and falls back to Firebase redirect
-sign-in if the browser blocks the popup. Configure the deployed hostname as a
-Firebase authorized domain and redeploy after changing environment variables.
+Google sign-in uses Firebase redirect on mobile devices and a popup on desktop,
+falling back to redirect if the browser blocks the popup. Configure the deployed
+hostname as a Firebase authorized domain and redeploy after changing environment
+variables.
 
 The backend must have valid PostgreSQL credentials in its `.env` file and its
 migrations must be applied. From the backend project directory:

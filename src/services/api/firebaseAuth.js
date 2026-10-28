@@ -61,6 +61,16 @@ function createGoogleProvider() {
   return provider;
 }
 
+function shouldUseGoogleRedirect() {
+  if (typeof navigator === "undefined") return false;
+
+  const userAgent = navigator.userAgent || "";
+  return (
+    /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/i.test(userAgent))
+  );
+}
+
 async function getGoogleAccount(result) {
   const credential = GoogleAuthProvider.credentialFromResult(result);
   const providerProfile = result.user.providerData.find(
@@ -102,6 +112,11 @@ export async function getGoogleIdToken() {
   const auth = getFirebaseAuth();
   const provider = createGoogleProvider();
   let result;
+
+  if (shouldUseGoogleRedirect()) {
+    await signInWithRedirect(auth, provider);
+    return null;
+  }
 
   try {
     result = await signInWithPopup(auth, provider);
