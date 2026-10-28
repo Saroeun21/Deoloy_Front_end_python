@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import authApi from "../../services/api/authapi.js";
 import {
   getGoogleIdToken,
+  getGoogleRedirectIdToken,
   isGooglePhotoUrl,
   readGooglePhotoUrl,
   signOutFromGoogle,
@@ -21,6 +22,9 @@ export function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState(readAccessToken);
   const [googlePhotoUrl, setGooglePhotoUrl] = useState(readGooglePhotoUrl);
   const [welcomeEmailStatus, setWelcomeEmailStatus] = useState(null);
+  const [googleRedirectComplete, setGoogleRedirectComplete] = useState(false);
+  const [googleRedirectError, setGoogleRedirectError] = useState("");
+  const googleRedirectResult = useRef(null);
 
   useEffect(() => {
     function handleUnauthorized() {
@@ -32,6 +36,61 @@ export function AuthProvider({ children }) {
     return () =>
       window.removeEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
   }, []);
+
+  const completeGoogleSignIn = useCallback(async (googleAccount) => {
+    const result = await authApi.loginWithGoogle(googleAccount);
+    if (!result.access_token) {
+      throw new Error(
+        "The Google sign-in response did not include an access token.",
+      );
+    }
+
+    localStorage.setItem(ACCESS_TOKEN_KEY, result.access_token);
+    setAccessToken(result.access_token);
+    setWelcomeEmailStatus(
+      result.welcome_email_status === "not_applicable"
+        ? null
+        : result.welcome_email_status,
+    );
+    const photoUrl = isGooglePhotoUrl(result.avatar_url)
+      ? result.avatar_url
+      : googleAccount.photoUrl;
+    if (isGooglePhotoUrl(photoUrl)) {
+      localStorage.setItem("googlePhotoUrl", photoUrl);
+      setGooglePhotoUrl(photoUrl);
+    } else {
+      localStorage.removeItem("googlePhotoUrl");
+      setGooglePhotoUrl("");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!googleRedirectResult.current) {
+      googleRedirectResult.current = getGoogleRedirectIdToken();
+    }
+
+    let active = true;
+    googleRedirectResult.current
+      .then(async (googleAccount) => {
+        if (!googleAccount || !active) return;
+        await completeGoogleSignIn(googleAccount);
+        if (active) setGoogleRedirectComplete(true);
+      })
+      .catch((error) => {
+        console.error("Could not complete Google redirect sign-in:", error);
+        if (active) {
+          setGoogleRedirectError(
+            error instanceof Error
+              ? error.message
+              : "Could not complete Google sign-in. Please try again.",
+          );
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [completeGoogleSignIn]);
 
   async function signIn(
     credentials,
@@ -72,30 +131,11 @@ export function AuthProvider({ children }) {
   }
 
   async function signInWithGoogle() {
+    setGoogleRedirectError("");
     const googleAccount = await getGoogleIdToken();
-    const result = await authApi.loginWithGoogle(googleAccount);
-    if (!result.access_token) {
-      throw new Error(
-        "The Google sign-in response did not include an access token.",
-      );
-    }
-    localStorage.setItem(ACCESS_TOKEN_KEY, result.access_token);
-    setAccessToken(result.access_token);
-    setWelcomeEmailStatus(
-      result.welcome_email_status === "not_applicable"
-        ? null
-        : result.welcome_email_status,
-    );
-    const photoUrl = isGooglePhotoUrl(result.avatar_url)
-      ? result.avatar_url
-      : googleAccount.photoUrl;
-    if (isGooglePhotoUrl(photoUrl)) {
-      localStorage.setItem("googlePhotoUrl", photoUrl);
-      setGooglePhotoUrl(photoUrl);
-    } else {
-      localStorage.removeItem("googlePhotoUrl");
-      setGooglePhotoUrl("");
-    }
+    if (!googleAccount) return false;
+    await completeGoogleSignIn(googleAccount);
+    return true;
   }
 
   function signOut() {
@@ -118,6 +158,8 @@ export function AuthProvider({ children }) {
       value={{
         accessToken,
         googlePhotoUrl,
+        googleRedirectComplete,
+        googleRedirectError,
         signIn,
         signInWithGoogle,
         signUp,

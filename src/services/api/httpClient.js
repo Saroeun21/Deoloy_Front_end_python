@@ -1,20 +1,10 @@
 const DEFAULT_API_BASE_URL = import.meta.env.PROD
   ? "https://deploy-back-end-python.onrender.com/api/v1"
   : "/api/v1";
-<<<<<<< HEAD
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(
   /\/+$/,
   "",
 );
-=======
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-const isAbsoluteApiUrl = /^https?:\/\//i.test(configuredApiBaseUrl || "");
-const BASE_URL = (
-  import.meta.env.PROD && !isAbsoluteApiUrl
-    ? DEFAULT_API_BASE_URL
-    : configuredApiBaseUrl || DEFAULT_API_BASE_URL
-).replace(/\/+$/, "");
->>>>>>> b7f188a (First Commit)
 const UNAUTHORIZED_EVENT = "tripos:unauthorized";
 
 export function resolveApiUrl(path) {

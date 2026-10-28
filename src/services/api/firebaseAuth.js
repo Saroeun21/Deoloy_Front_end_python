@@ -3,7 +3,9 @@ import {
   getAuth,
   getAdditionalUserInfo,
   GoogleAuthProvider,
+  getRedirectResult,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
 } from "firebase/auth";
 
@@ -51,12 +53,15 @@ function getFirebaseAuth() {
   return getAuth(app);
 }
 
-export async function getGoogleIdToken() {
-  const auth = getFirebaseAuth();
+function createGoogleProvider() {
   const provider = new GoogleAuthProvider();
   provider.addScope("profile");
   provider.setCustomParameters({ prompt: "select_account" });
-  const result = await signInWithPopup(auth, provider);
+
+  return provider;
+}
+
+async function getGoogleAccount(result) {
   const credential = GoogleAuthProvider.credentialFromResult(result);
   const providerProfile = result.user.providerData.find(
     (profile) => profile.providerId === "google.com",
@@ -91,6 +96,34 @@ export async function getGoogleIdToken() {
     idToken: await result.user.getIdToken(true),
     photoUrl: isGooglePhotoUrl(photoUrl) ? photoUrl : null,
   };
+}
+
+export async function getGoogleIdToken() {
+  const auth = getFirebaseAuth();
+  const provider = createGoogleProvider();
+  let result;
+
+  try {
+    result = await signInWithPopup(auth, provider);
+  } catch (error) {
+    if (error?.code !== "auth/popup-blocked") {
+      throw error;
+    }
+
+    await signInWithRedirect(auth, provider);
+    return null;
+  }
+
+  return getGoogleAccount(result);
+}
+
+export async function getGoogleRedirectIdToken() {
+  if (Object.values(firebaseConfig).some((value) => !value)) {
+    return null;
+  }
+
+  const result = await getRedirectResult(getFirebaseAuth());
+  return result ? getGoogleAccount(result) : null;
 }
 
 export async function signOutFromGoogle() {

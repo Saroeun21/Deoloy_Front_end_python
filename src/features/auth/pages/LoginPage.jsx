@@ -1,11 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../app/providers/authContext.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import AuthPageLayout from "../components/AuthPageLayout.jsx";
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle } = useAuth();
+  const {
+    googleRedirectComplete,
+    googleRedirectError,
+    signIn,
+    signInWithGoogle,
+  } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -13,13 +18,21 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (googleRedirectComplete) {
+      navigate("/", { replace: true });
+    }
+  }, [googleRedirectComplete, navigate]);
+
   async function handleGoogleSignIn() {
     setSubmitting(true);
     setError("");
     try {
-      await signInWithGoogle();
-      const returnTo = location.state?.from;
-      navigate(returnTo || "/", { replace: true });
+      const signedIn = await signInWithGoogle();
+      if (signedIn) {
+        const returnTo = location.state?.from;
+        navigate(returnTo || "/", { replace: true });
+      }
     } catch (googleError) {
       console.error("Could not sign in with Google:", googleError);
       setError(
@@ -78,12 +91,12 @@ export default function LoginPage() {
         </>
       }
     >
-      {error && (
+      {(error || googleRedirectError) && (
         <p
           className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {error || googleRedirectError}
         </p>
       )}
 
