@@ -42,15 +42,18 @@ Firebase project:
 ```text
 VITE_API_BASE_URL=https://deploy-back-end-python.onrender.com/api/v1
 VITE_FIREBASE_API_KEY=<Firebase Web API key>
-VITE_FIREBASE_AUTH_DOMAIN=deoloy-front-end-python.vercel.app
+VITE_FIREBASE_AUTH_DOMAIN=<Firebase project auth domain>
 VITE_FIREBASE_PROJECT_ID=<Firebase project ID>
 VITE_FIREBASE_APP_ID=<Firebase Web app ID>
 ```
 
-For local development, use `<Firebase project ID>.firebaseapp.com` as
-`VITE_FIREBASE_AUTH_DOMAIN`. For Vercel, use the deployed frontend hostname as
-shown above; `vercel.json` proxies `/__/auth/*` to the Firebase auth helper so
-redirect sign-in works in browsers that restrict third-party storage.
+Use `<Firebase project ID>.firebaseapp.com` as `VITE_FIREBASE_AUTH_DOMAIN` for
+local development. Production builds on Vercel automatically use the deployed
+`.vercel.app` hostname as `authDomain`; `vercel.json` proxies `/__/auth/*` to
+the Firebase auth helper so redirect sign-in works in browsers that restrict
+third-party storage. For a custom production domain, set
+`VITE_FIREBASE_AUTH_DOMAIN` to that hostname and add the matching auth proxy
+rewrite.
 
 Add these callback URLs to the Google OAuth web client’s **Authorized redirect
 URIs** in Google Cloud Console:

@@ -40,7 +40,15 @@ export function readGooglePhotoUrl() {
 }
 
 function getFirebaseAuth() {
-  const missingSettings = Object.entries(firebaseConfig)
+  const config = {
+    ...firebaseConfig,
+    authDomain:
+      import.meta.env.PROD &&
+      window.location.hostname.endsWith(".vercel.app")
+        ? window.location.hostname
+        : firebaseConfig.authDomain,
+  };
+  const missingSettings = Object.entries(config)
     .filter(([, value]) => !value)
     .map(([name]) => name);
   if (missingSettings.length > 0) {
@@ -49,7 +57,7 @@ function getFirebaseAuth() {
     );
   }
 
-  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  const app = getApps().length > 0 ? getApp() : initializeApp(config);
   return getAuth(app);
 }
 
