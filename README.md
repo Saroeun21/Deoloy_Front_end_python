@@ -42,16 +42,30 @@ Firebase project:
 ```text
 VITE_API_BASE_URL=https://deploy-back-end-python.onrender.com/api/v1
 VITE_FIREBASE_API_KEY=<Firebase Web API key>
-VITE_FIREBASE_AUTH_DOMAIN=<Firebase project auth domain>
+VITE_FIREBASE_AUTH_DOMAIN=deoloy-front-end-python.vercel.app
 VITE_FIREBASE_PROJECT_ID=<Firebase project ID>
 VITE_FIREBASE_APP_ID=<Firebase Web app ID>
 ```
 
-After adding or changing the variables, redeploy the Vercel project because
-Vite embeds `VITE_` values into the build. In Firebase Console, enable the
-Google provider under **Authentication > Sign-in method** and add the deployed
-frontend hostname to **Authentication > Settings > Authorized domains**. The
-backend Render service must use the same `FIREBASE_PROJECT_ID`.
+For local development, use `<Firebase project ID>.firebaseapp.com` as
+`VITE_FIREBASE_AUTH_DOMAIN`. For Vercel, use the deployed frontend hostname as
+shown above; `vercel.json` proxies `/__/auth/*` to the Firebase auth helper so
+redirect sign-in works in browsers that restrict third-party storage.
+
+Add these callback URLs to the Google OAuth web client’s **Authorized redirect
+URIs** in Google Cloud Console:
+
+```text
+https://komsan-50436.firebaseapp.com/__/auth/handler
+https://deoloy-front-end-python.vercel.app/__/auth/handler
+```
+
+In Firebase Console, enable the Google provider under **Authentication >
+Sign-in method** and add the deployed frontend hostname to **Authentication >
+Settings > Authorized domains**. After adding or changing the Vercel
+environment variable or OAuth redirect URI, redeploy the Vercel project because
+Vite embeds `VITE_` values into the build. The backend Render service must use
+the same `FIREBASE_PROJECT_ID`.
 
 Vercel serves this application as a single-page app. The root `vercel.json`
 rewrite sends client-side paths such as `/login` and `/register` to the app so

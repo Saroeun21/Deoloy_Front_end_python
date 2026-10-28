@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/__/auth/:path*",
+      "destination": "https://komsan-50436.firebaseapp.com/__/auth/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://deploy-back-end-python.onrender.com/api/:path*"
     },
