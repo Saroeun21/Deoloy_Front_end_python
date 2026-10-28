@@ -180,19 +180,6 @@ html.dark [class~="text-sky-800"] {
   color: #7dd3fc;
 }
 
-html.dark .navbar-logo-link {
-  width: 12.5rem;
-  height: 4.5rem;
-  justify-content: center;
-  background-color: transparent;
-}
-
-html.dark .navbar-logo-link img {
-  width: 7.33rem;
-  height: 4rem;
-  object-fit: contain;
-}
-
 html.dark input,
 html.dark textarea,
 html.dark select {

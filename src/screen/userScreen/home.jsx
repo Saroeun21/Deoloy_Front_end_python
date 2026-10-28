@@ -236,10 +236,10 @@ export default function Home({
   };
 
   return (
-    <div className="space-y-8 pb-16 min-h-screen bg-slate-50 text-slate-800">
+    <div className="min-h-screen space-y-8 bg-slate-50 pb-16 text-slate-800">
       {/* Hero Banner */}
       <section
-        className="relative flex min-h-[70dvh] items-center justify-center overflow-hidden bg-[#031e1c] px-6 py-12 text-white shadow-xl md:px-10 md:py-14"
+        className="relative flex min-h-[70dvh] items-center justify-center overflow-hidden bg-[#031e1c] px-4 py-10 text-white shadow-xl sm:px-6 sm:py-12 md:px-10 md:py-14 max-sm:min-h-[calc(100dvh-7rem)]"
         onFocusCapture={() => setIsHeroFocused(true)}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -263,14 +263,14 @@ export default function Home({
           </div>
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(3,30,28,0.48),rgba(3,30,28,0.42))]" />
         </div>
-        <div className="relative z-10 mx-auto max-w-5xl space-y-5 text-center">
+        <div className="relative z-10 mx-auto w-full max-w-5xl space-y-5 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-500/30">
             <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
           TRIPOS TRAVEL WORKSPACE
           </div>
           
           <div key={activeHeroSlide?.img || 'default'} className="home-hero-copy">
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
               {activeHeroSlide ? (
                 <>
                   Discover{' '}
@@ -288,14 +288,14 @@ export default function Home({
               )}
             </h1>
 
-            <p className="text-slate-300 text-xs md:text-sm max-w-xl mx-auto">
+            <p className="mx-auto max-w-xl text-sm leading-6 text-slate-300">
               {activeHeroSlide?.desc ||
                 'Discover places, plan your trip, manage your budget, and keep everything in one calm workspace.'}
             </p>
           </div>
 
           {/* Search Box */}
-          <div className="mt-7 space-y-4 rounded-2xl bg-white p-5 text-left text-slate-800 shadow-2xl md:p-6">
+          <div className="mt-7 space-y-4 rounded-2xl bg-white p-4 text-left text-slate-800 shadow-2xl sm:p-5 md:p-6">
             <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-100 pb-3 text-sm font-semibold">
               {['All', 'Destinations'].map(tab => (
                 <button
@@ -311,8 +311,8 @@ export default function Home({
               ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-5">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-12">
+              <div className="col-span-2 flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-5">
                 <IconSearch />
                 <input 
                   type="text" 
@@ -325,25 +325,25 @@ export default function Home({
                       openDestinationSearch();
                     }
                   }}
-                  placeholder="Search destinations... (e.g. China)" 
-                  className="w-full bg-transparent text-sm font-medium text-slate-800 outline-none"
+                  placeholder="Search destinations..."
+                  className="w-full min-w-0 bg-transparent text-sm font-medium text-slate-800 outline-none"
                 />
               </div>
 
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-3">
+              <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 md:col-span-3 md:gap-3 md:px-4">
                 <IconCalendar />
                 <div>
-                  <div className="text-[10px] font-bold uppercase text-slate-400">DESTINATIONS</div>
+                  <div className="text-[9px] font-bold uppercase leading-4 text-slate-400 sm:text-[10px]">DESTINATIONS</div>
                   <div className="text-sm font-semibold text-slate-700">
                     {destinationsLoading ? 'Loading…' : destinations.length}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-3">
+              <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 md:col-span-3 md:gap-3 md:px-4">
                 <IconUsers />
                 <div>
-                  <div className="text-[10px] font-bold uppercase text-slate-400">PLACES TO VISIT</div>
+                  <div className="text-[9px] font-bold uppercase leading-4 text-slate-400 sm:text-[10px]">PLACES TO VISIT</div>
                   <div className="text-sm font-semibold text-slate-700">
                     {recommendationsLoading ? 'Loading…' : recommendations.length}
                   </div>
@@ -354,25 +354,26 @@ export default function Home({
                 type="button"
                 onClick={openDestinationSearch}
                 aria-label="Search destinations"
-                className="flex items-center justify-center rounded-xl bg-teal-600 p-4 text-white transition hover:bg-teal-700 md:col-span-1"
+                className="col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-teal-700 md:col-span-1 md:min-h-0 md:p-4"
               >
+                <span className="md:hidden">Search destinations</span>
                 <IconArrowRight />
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-4 pt-2">
+          <div className="mx-auto flex w-full max-w-sm flex-col items-stretch justify-center gap-3 pt-2 sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
             <button 
               type="button"
               onClick={() => navigate('/explore')}
-              className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-2"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-teal-700 sm:w-auto sm:py-2.5 sm:text-xs"
             >
               Explore Destinations <IconArrowRight />
             </button>
             <button 
               type="button"
               onClick={() => navigate('/trips')}
-              className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl font-bold text-xs border border-white/20 transition"
+              className="min-h-12 w-full rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto sm:py-2.5 sm:text-xs"
             >
               Plan a Trip
             </button>
@@ -410,7 +411,7 @@ export default function Home({
       </section>
 
       {/* Popular Destinations */}
-      <section className="mx-6 space-y-4 md:mx-8">
+      <section className="mx-4 space-y-4 sm:mx-6 md:mx-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-xs font-bold text-teal-600 tracking-wider">01 // DESTINATIONS</div>
@@ -517,7 +518,7 @@ export default function Home({
       </section>
 
       {/* AI Feature Banner */}
-      <section className="mx-6 flex flex-col items-center justify-between gap-6 rounded-2xl bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 p-6 text-white shadow-lg md:mx-8 md:flex-row">
+      <section className="mx-4 flex flex-col items-center justify-between gap-6 rounded-2xl bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 p-5 text-white shadow-lg sm:mx-6 sm:p-6 md:mx-8 md:flex-row">
         <div className="space-y-2 max-w-xl">
           <span className="bg-teal-500/30 text-teal-200 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border border-teal-400/30">
             Komsan Screenshot AI 2.0
@@ -537,7 +538,7 @@ export default function Home({
       </section>
 
       {/* Recommended Places */}
-      <section className="mx-6 space-y-4 md:mx-8">
+      <section className="mx-4 space-y-4 sm:mx-6 md:mx-8">
         <div>
           <div className="text-xs font-bold text-teal-600 tracking-wider">02 // PLACES</div>
           <h2 className="text-xl font-black text-slate-800">Places to Visit</h2>

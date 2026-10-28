@@ -201,7 +201,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
 
       <nav
         aria-label="Main navigation"
-        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto max-sm:order-last max-sm:basis-full max-sm:flex-none max-sm:border-t max-sm:border-slate-100 max-sm:pt-1"
+        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain max-sm:order-last max-sm:basis-full max-sm:flex-none max-sm:border-t max-sm:border-slate-100 max-sm:pt-1 max-sm:pb-0.5"
       >
         {menuItems.map((item) => {
           const IconComponent = item.icon;
@@ -228,7 +228,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
                 }
               }}
               className={({ isActive }) =>
-                `flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors max-sm:px-2 ${
+                `flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors max-sm:px-3 max-sm:text-xs ${
                   isActive
                     ? isIndigo
                       ? "bg-indigo-600 text-white"
@@ -256,7 +256,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
                         />
                       )}
                   </span>
-                  <span className="hidden xl:inline">{item.name}</span>
+                  <span className="hidden max-sm:inline xl:inline">{item.name}</span>
                   {item.badge && (
                     <span
                       className={`rounded px-1 py-0.5 text-[9px] font-bold leading-none ${
@@ -371,7 +371,7 @@ function UserNavbar({ onSignOut, isSignedIn, currentUser }) {
               <span className="hidden sm:inline">Sign in</span>
             </NavLink>
             <Link
-              className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:scale-[1.03] hover:bg-teal-800"
+              className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-teal-800 sm:hover:scale-[1.03]"
               to="/register"
             >
               Sign up
