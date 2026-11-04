@@ -23,13 +23,13 @@ const HERO_FALLBACK_SLIDES = [
     img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=85',
   },
   {
-    title: 'Bangkok',
-    desc: 'Explore vibrant city streets, local markets, and golden temples.',
+    title: 'Hanoi, Vietnam',
+    desc: 'Explore lively Old Quarter streets, local markets, and lakeside cafés.',
     img: 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85',
   },
   {
-    title: 'Phuket',
-    desc: 'Plan a getaway to bright blue water and peaceful beaches.',
+    title: 'Da Nang',
+    desc: 'Plan a getaway to bright blue water, sandy beaches, and coastal mountains.',
     img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=85',
   },
 ];

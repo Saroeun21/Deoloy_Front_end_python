@@ -31,50 +31,50 @@ const memories = [
   {
     day: 1,
     date: 'MON, APR 06',
-    place: 'BANGKOK',
-    title: 'Arrival in the City of Angels & Night River Cruise',
+    place: 'HANOI',
+    title: 'Arrival in Hanoi & Evening by Hoan Kiem Lake',
     time: '4:30 PM — 10:15 PM',
-    location: 'Bangkok',
-    note: 'The city welcomed us with warm air, the scent of jasmine, and a thousand little moments. We watched the skyline shimmer from the river as the sun disappeared behind the temples.',
-    tags: ['#Bangkok', '#StreetFood', '#NightCruise'],
+    location: 'Hanoi',
+    note: 'The city welcomed us with warm air, the scent of street food, and a thousand little moments. We watched the lights shimmer around Hoan Kiem Lake as the sun went down.',
+    tags: ['#Hanoi', '#StreetFood', '#HoanKiemLake'],
     photos: [
       {
         src: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=85',
-        alt: 'Bangkok skyline and river at dusk',
+        alt: 'City skyline and river at dusk',
         featured: true,
       },
       {
         src: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=700&q=85',
-        alt: 'Ornate temple roof',
+        alt: 'Ornate roof detail in the Old Quarter',
       },
       {
         src: 'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=700&q=85',
-        alt: 'Colorful Bangkok street at night',
+        alt: 'Colorful Hanoi street at night',
       },
     ],
   },
   {
     day: 2,
     date: 'TUE, APR 07',
-    place: 'BANGKOK',
-    title: 'Gilded Splendor of Wat Phra Kaew & Sunset at Wat Arun',
+    place: 'HUE',
+    title: 'Imperial City of Hue & Sunset by the Perfume River',
     time: '8:00 AM — 6:40 PM',
-    location: 'Old City, Bangkok',
-    note: 'A morning among golden spires and intricate mosaics, followed by a slow ferry ride across the river. Wat Arun at sunset felt like the perfect pause in a very full day.',
-    tags: ['#TempleHopping', '#WatArun', '#GoldenHour'],
+    location: 'Hue',
+    note: 'A morning among the gates and gardens of the Imperial City, followed by a slow boat ride along the Perfume River. The sunset made a perfect pause in a very full day.',
+    tags: ['#Hue', '#ImperialCity', '#GoldenHour'],
     photos: [
       {
         src: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=1200&q=85',
-        alt: 'The decorated facade of a temple',
+        alt: 'The decorated facade of an imperial citadel',
         featured: true,
       },
       {
         src: 'https://images.unsplash.com/photo-1564910443496-5fd2d76b47fa?auto=format&fit=crop&w=700&q=85',
-        alt: 'Golden details inside a temple',
+        alt: 'Golden details inside a historic building',
       },
       {
         src: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=700&q=85',
-        alt: 'Temple beside the Chao Phraya River',
+        alt: 'Historic architecture beside a river',
       },
     ],
     weather: '32°C Sunny',
@@ -82,24 +82,24 @@ const memories = [
   {
     day: 3,
     date: 'WED, APR 08',
-    place: 'CHIANG MAI',
-    title: 'Chiang Mai Old City & Ethical Elephant Sanctuary',
+    place: 'DA NANG',
+    title: 'Da Nang Coast & Marble Mountains',
     time: '7:15 AM — 5:20 PM',
-    location: 'Chiang Mai',
-    note: 'We traded temple bells for birdsong and spent the morning learning how the sanctuary cares for its gentle residents. No rushing, no riding — just muddy paths and unforgettable company.',
-    tags: ['#ChiangMai', '#ElephantSanctuary', '#SlowTravel'],
+    location: 'Da Nang',
+    note: 'We spent the morning exploring the Marble Mountains, then slowed down for a walk along the coast. The sea breeze and quiet trails made for an unforgettable day.',
+    tags: ['#DaNang', '#MarbleMountains', '#SlowTravel'],
     photos: [
       {
         src: 'https://images.unsplash.com/photo-1557223562-6c77ef16210f?auto=format&fit=crop&w=900&q=85',
-        alt: 'Elephants walking through a green sanctuary',
+        alt: 'A green trail among the Marble Mountains',
         featured: true,
       },
       {
         src: 'https://images.unsplash.com/photo-1513415277900-a62401e19be4?auto=format&fit=crop&w=900&q=85',
-        alt: 'A quiet, leafy northern path',
+        alt: 'A quiet, leafy path in central Vietnam',
       },
     ],
-    audio: 'Morning walk with elephants — Chiang Mai',
+    audio: 'Morning walk by the coast — Da Nang',
   },
 ];
 
@@ -144,7 +144,7 @@ function TopBar({ searchQuery, onSearchChange }) {
           <Plus size={16} /> <span className="hidden lg:inline">New Trip</span>
         </a>
         <span className="hidden h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 text-[11px] font-semibold text-slate-600 lg:flex">
-          <Sun size={15} className="text-amber-500" /> Bangkok 31°C
+          <Sun size={15} className="text-amber-500" /> Hanoi 31°C
         </span>
         <button
           type="button"
@@ -342,7 +342,7 @@ function SmartReel() {
 function Superlatives() {
   const entries = [
     { title: 'Best Meal', detail: 'Local noodles at Thipsamai', icon: '✦', color: 'bg-amber-50 text-amber-700', rank: '01' },
-    { title: 'Favorite Landmark', detail: 'Wat Arun at golden hour', icon: '⌖', color: 'bg-sky-50 text-sky-700', rank: '02' },
+    { title: 'Favorite Landmark', detail: 'Hue Imperial City at golden hour', icon: '⌖', color: 'bg-sky-50 text-sky-700', rank: '02' },
     { title: 'Funniest Moment', detail: 'The tuk-tuk karaoke ride', icon: '☺', color: 'bg-rose-50 text-rose-700', rank: '03' },
   ];
   return (
@@ -419,15 +419,15 @@ function RouteFootprint() {
       </div>
       <div className="relative flex h-31.5 items-center justify-center overflow-hidden rounded-xl border border-emerald-100 bg-[#f0f7f2]">
         <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'radial-gradient(#a6c8b3 0.8px, transparent 0.8px)', backgroundSize: '14px 14px' }} />
-        <svg viewBox="0 0 320 130" className="absolute inset-0 h-full w-full" role="img" aria-label="Travel route from Bangkok to Chiang Mai and Phuket">
+        <svg viewBox="0 0 320 130" className="absolute inset-0 h-full w-full" role="img" aria-label="Travel route from Hanoi to Hue and Da Nang">
           <path d="M79 90 C82 76 100 70 108 56 S131 34 145 40 S162 66 179 69 S200 48 214 38" fill="none" stroke="#10b981" strokeDasharray="4 5" strokeLinecap="round" strokeWidth="2.5" />
           <path d="M79 90 C101 104 126 101 145 90 S167 76 179 69" fill="none" stroke="#7c3aed" strokeDasharray="3 5" strokeLinecap="round" strokeWidth="2" />
           <circle cx="79" cy="90" r="5" fill="#059669" stroke="white" strokeWidth="3" />
           <circle cx="145" cy="40" r="5" fill="#059669" stroke="white" strokeWidth="3" />
           <circle cx="179" cy="69" r="5" fill="#7c3aed" stroke="white" strokeWidth="3" />
-          <text x="55" y="112" fill="#475569" fontSize="9" fontWeight="600">Bangkok</text>
-          <text x="124" y="27" fill="#475569" fontSize="9" fontWeight="600">Chiang Mai</text>
-          <text x="185" y="85" fill="#475569" fontSize="9" fontWeight="600">Phuket</text>
+          <text x="55" y="112" fill="#475569" fontSize="9" fontWeight="600">Hanoi</text>
+          <text x="124" y="27" fill="#475569" fontSize="9" fontWeight="600">Hue</text>
+          <text x="185" y="85" fill="#475569" fontSize="9" fontWeight="600">Da Nang</text>
         </svg>
         <span className="absolute right-2 top-2 rounded-md bg-white/90 px-2 py-1 text-[8px] font-bold text-slate-500 shadow-sm">TRIP JOURNAL</span>
       </div>
@@ -436,7 +436,7 @@ function RouteFootprint() {
         <span className="text-[13px] font-extrabold text-slate-900">1,284 <span className="text-[10px] font-semibold text-slate-400">km</span></span>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {['Bangkok · 3 days', 'Chiang Mai · 2 days', 'Phuket · 2 days'].map((place) => (
+        {['Hanoi · 3 days', 'Hue · 2 days', 'Da Nang · 2 days'].map((place) => (
           <span key={place} className="rounded-full bg-slate-100 px-2 py-1 text-[8px] font-semibold text-slate-500">{place}</span>
         ))}
       </div>
@@ -555,9 +555,9 @@ export default function TripMemories() {
           <div className="mb-5 flex items-center gap-2 overflow-x-auto pb-1">
             {[
               { id: 'all', label: 'All Days (7)' },
-              { id: '1', label: 'Day 1: Bangkok' },
+              { id: '1', label: 'Day 1: Hanoi' },
               { id: '2', label: 'Day 2: Temples' },
-              { id: '3', label: 'Day 3: Chiang Mai' },
+              { id: '3', label: 'Day 3: Da Nang' },
             ].map((tab) => (
               <button
                 key={tab.id}
