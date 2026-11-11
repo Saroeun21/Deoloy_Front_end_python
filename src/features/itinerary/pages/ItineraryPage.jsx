@@ -407,12 +407,12 @@ function ItineraryPage() {
         </nav>
 
         {isFormOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 p-4" onMouseDown={(event) => {
+          <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-950/40 p-3 sm:items-center sm:p-4" onMouseDown={(event) => {
             if (event.target === event.currentTarget && !isSaving) setIsFormOpen(false);
           }}>
             <form
               aria-labelledby="add-itinerary-title"
-              className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
+              className="my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-white p-5 shadow-2xl sm:max-h-[calc(100dvh-2rem)] sm:p-6"
               onSubmit={handleAddActivity}
               role="dialog"
               aria-modal="true"

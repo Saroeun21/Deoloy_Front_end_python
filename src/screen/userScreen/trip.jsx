@@ -1062,10 +1062,15 @@ function Trip() {
 
       {/* Modal: Create Trip */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-900/50 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+          <div
+            aria-labelledby="create-trip-title"
+            aria-modal="true"
+            className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl sm:max-h-[calc(100dvh-2rem)] sm:p-6"
+            role="dialog"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800">Plan a New Trip</h3>
+              <h3 className="text-lg font-bold text-slate-800" id="create-trip-title">Plan a New Trip</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
@@ -1074,7 +1079,11 @@ function Trip() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="mt-4 space-y-4">
+            <form
+              onSubmit={handleCreateSubmit}
+              className="mt-4 flex min-h-0 flex-1 flex-col"
+            >
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Destination
@@ -1304,8 +1313,8 @@ function Trip() {
                   className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
                 />
               </div>
-
-              <div className="flex justify-end gap-3 pt-2">
+              </div>
+              <div className="flex shrink-0 justify-end gap-3 border-t border-slate-100 bg-white pt-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

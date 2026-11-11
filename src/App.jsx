@@ -300,7 +300,7 @@ function UserPage() {
           </button>
         </div>
       )}
-      <main className="app-main-scroll min-h-0 min-w-0 flex-1 overflow-y-auto">
+      <main className="app-main-scroll min-h-0 min-w-0 flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-0">
         {accessToken && savedPlacesError && (
           <div
             className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 md:mx-8"

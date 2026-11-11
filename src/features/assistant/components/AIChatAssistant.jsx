@@ -386,7 +386,7 @@ function AIChatAssistantPanel() {
       {!isOpen && (
         <button
           aria-label="Open Komsan AI assistant"
-          className="fixed bottom-5 right-5 z-40 grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-transparent transition hover:scale-105 sm:h-32 sm:w-32"
+          className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-3 z-40 grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-transparent transition hover:scale-105 sm:bottom-5 sm:right-5 sm:h-28 sm:w-28"
           onClick={() => setIsOpen(true)}
           title="Open Komsan AI assistant"
           type="button"
